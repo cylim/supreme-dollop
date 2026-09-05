@@ -5,17 +5,21 @@
 - **What it does:** Not documented yet.
 - **Live app:** not deployed
 - **Repo:** https://github.com/cylim/supreme-dollop
-- **Frontend:** not deployed
+- **Frontend:** Convex static hosting
 - **Convex deployment:** not deployed
 - **Components:** none
 - **Convex features:** none yet
 - **Auth:** none
 - **AI models:** none
 - **Started:** 2026-09-05T11:58:05Z
-- **Last updated:** 2026-09-05T12:06:32Z
+- **Last updated:** 2026-09-05T12:09:19Z
 
 ## Log
 
 ### 2026-09-05 - 32ce2d1
 Created the project README. No application behavior is documented yet.
 (`README.md`)
+
+### 2026-09-05 - working tree
+Selected Convex static hosting for the frontend. The app is not configured or
+deployed yet.
