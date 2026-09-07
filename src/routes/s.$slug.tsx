@@ -18,7 +18,8 @@ function SchedulePage() {
 
 function Schedule() {
   const { slug } = Route.useParams()
-  const schedule = useQuery(api.schedules.getBySlug, { slug, now: Date.now() })
+  const [now] = useState(() => Date.now())
+  const schedule = useQuery(api.schedules.getBySlug, { slug, now })
   const calendar = useQuery(api.users.calendarStatus)
   const submitVote = useMutation(api.schedules.submitVote)
   const chooseFinal = useMutation(api.schedules.chooseFinal)

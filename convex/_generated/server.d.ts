@@ -38,6 +38,8 @@ type Env = {
   readonly AUTH_JWKS: string;
   readonly AUTH_PRIVATE_KEY: string;
   readonly CALENDAR_TOKEN_ENCRYPTION_KEY: string | undefined;
+  readonly E2E_PASSWORD_AUTH_ENABLED: string | undefined;
+  readonly E2E_TEST_EMAILS: string | undefined;
 };
 
 /**

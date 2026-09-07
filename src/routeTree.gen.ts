@@ -10,12 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as E2eLoginRouteImport } from './routes/e2e-login'
 import { Route as NewRouteImport } from './routes/new'
 import { Route as SSlugRouteImport } from './routes/s.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const E2eLoginRoute = E2eLoginRouteImport.update({
+  id: '/e2e-login',
+  path: '/e2e-login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NewRoute = NewRouteImport.update({
@@ -31,30 +37,34 @@ const SSlugRoute = SSlugRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/e2e-login': typeof E2eLoginRoute
   '/new': typeof NewRoute
   '/s/$slug': typeof SSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/e2e-login': typeof E2eLoginRoute
   '/new': typeof NewRoute
   '/s/$slug': typeof SSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/e2e-login': typeof E2eLoginRoute
   '/new': typeof NewRoute
   '/s/$slug': typeof SSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/new' | '/s/$slug'
+  fullPaths: '/' | '/e2e-login' | '/new' | '/s/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/new' | '/s/$slug'
-  id: '__root__' | '/' | '/new' | '/s/$slug'
+  to: '/' | '/e2e-login' | '/new' | '/s/$slug'
+  id: '__root__' | '/' | '/e2e-login' | '/new' | '/s/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  E2eLoginRoute: typeof E2eLoginRoute
   NewRoute: typeof NewRoute
   SSlugRoute: typeof SSlugRoute
 }
@@ -66,6 +76,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/e2e-login': {
+      id: '/e2e-login'
+      path: '/e2e-login'
+      fullPath: '/e2e-login'
+      preLoaderRoute: typeof E2eLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/new': {
@@ -87,6 +104,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  E2eLoginRoute: E2eLoginRoute,
   NewRoute: NewRoute,
   SSlugRoute: SSlugRoute,
 }

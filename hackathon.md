@@ -12,7 +12,7 @@
 - **Auth:** Convex Auth
 - **AI models:** none
 - **Started:** 2026-09-05T11:58:05Z
-- **Last updated:** 2026-09-07T03:05:49Z
+- **Last updated:** 2026-09-07T06:41:49Z
 
 ## Log
 
@@ -24,7 +24,7 @@ Created the project README. No application behavior is documented yet.
 Selected Convex static hosting for the frontend. The app is not configured or
 deployed yet.
 
-### 2026-09-07 - working tree
+### 2026-09-07 - b0968ed
 Built JRNY Select with TanStack Start and StyleX: authenticated public and
 invite-only schedules, exact-time and range-generated candidates, realtime
 availability voting, best-overlap recommendations, and host-approved
@@ -42,3 +42,13 @@ call to action. Refined candidate entry into accessible Exact time and Rough
 window tabs, and added a second schedule-creation call to action before the
 landing footer (`src/routes/new.tsx`, `src/routes/index.tsx`,
 `src/components/AuthGate.tsx`).
+
+### 2026-09-07 - working tree
+Added gated test-only password accounts and Playwright coverage for three-user
+invite-only and public scheduling flows. Both browser scenarios now pass through
+schedule creation, voting, and live best-overlap ranking; the invited flow also
+verifies host confirmation. Fixed a reactive schedule query that repeatedly
+changed its time argument and never left the loading state. AgentMail now skips
+configured test recipients before creating the delivery client, with policy
+tests covering suppression (`e2e/scheduling.spec.ts`, `src/routes/s.$slug.tsx`,
+`convex/auth.ts`, `convex/notifications.ts`).
