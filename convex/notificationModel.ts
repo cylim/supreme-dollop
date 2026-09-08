@@ -55,6 +55,39 @@ export const getPayload = internalQuery({
   },
 })
 
+export const getDecisionPayload = internalQuery({
+  args: { decisionId: v.id('decisions') },
+  returns: v.union(
+    v.object({
+      slug: v.string(),
+      title: v.string(),
+      timezone: v.string(),
+      recipients: v.array(v.string()),
+      selectedStartAt: v.union(v.number(), v.null()),
+      selectedEndAt: v.union(v.number(), v.null()),
+    }),
+    v.null(),
+  ),
+  handler: async (ctx, args) => {
+    const decision = await ctx.db.get('decisions', args.decisionId)
+    if (decision === null) return null
+    const invitations = await ctx.db
+      .query('decisionInvitations')
+      .withIndex('by_decision_and_email', (q) =>
+        q.eq('decisionId', decision._id),
+      )
+      .take(100)
+    return {
+      slug: decision.slug,
+      title: decision.title,
+      timezone: '',
+      recipients: invitations.map((item) => item.email),
+      selectedStartAt: null,
+      selectedEndAt: null,
+    }
+  },
+})
+
 export const markRun = internalMutation({
   args: {
     notificationRunId: v.id('notificationRuns'),

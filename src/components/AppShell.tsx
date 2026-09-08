@@ -29,6 +29,9 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link to="/new" {...stylex.props(styles.navLink)}>
                 New schedule
               </Link>
+              <Link to="/new/decision" {...stylex.props(styles.navLink)}>
+                New decision
+              </Link>
               <button
                 type="button"
                 {...stylex.props(styles.ghostButton)}

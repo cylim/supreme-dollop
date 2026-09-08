@@ -1,7 +1,16 @@
 import {
+  MAX_ATTACHED_DECISIONS,
+  
+  
+  normalizeAttachedDecisionDraft,
+  normalizeSelectMode,
+  normalizeStandaloneDecisionDraft
+} from './decisionDraft'
+import {
   generateRangeCandidates,
   normalizeScheduleDraft,
 } from './scheduleDraft'
+import type {NormalizedAttachedDecisionDraft, NormalizedStandaloneDecisionDraft} from './decisionDraft';
 import type {
   CandidateTime,
   NormalizedScheduleDraft,
@@ -14,20 +23,56 @@ const explicitOffset = /(Z|[+-]\d{2}:\d{2})$/
 
 export const scheduleRequestMarkers = { start: requestStart, end: requestEnd }
 
-export function parseInboundScheduleRequest(
+export type ParsedInboundRequest =
+  | {
+      kind: 'schedule'
+      schedule: NormalizedScheduleDraft
+      decisions: Array<NormalizedAttachedDecisionDraft>
+    }
+  | {
+      kind: 'decision'
+      decision: NormalizedStandaloneDecisionDraft
+    }
+
+export function parseInboundRequest(
   body: string,
   now = Date.now(),
-): NormalizedScheduleDraft {
+): ParsedInboundRequest {
   const json = extractRequestJson(body)
   let value: unknown
   try {
     value = JSON.parse(json)
   } catch {
-    throw new Error('The schedule request contains invalid JSON.')
+    throw new Error('The request contains invalid JSON.')
   }
-  if (!isRecord(value))
-    throw new Error('The schedule request must be a JSON object.')
+  if (!isRecord(value)) throw new Error('The request must be a JSON object.')
+  const kind = value.kind
+  if (kind !== 'schedule' && kind !== 'decision') {
+    throw new Error('kind must be schedule or decision.')
+  }
+  if (kind === 'decision') return { kind, decision: parseStandaloneDecision(value, now) }
+  return {
+    kind,
+    schedule: parseSchedule(value, now),
+    decisions: parseAttachedDecisions(value.decisions, now),
+  }
+}
 
+export function parseInboundScheduleRequest(
+  body: string,
+  now = Date.now(),
+): NormalizedScheduleDraft {
+  const parsed = parseInboundRequest(body, now)
+  if (parsed.kind !== 'schedule') {
+    throw new Error('kind must be schedule.')
+  }
+  return parsed.schedule
+}
+
+function parseSchedule(
+  value: Record<string, unknown>,
+  now: number,
+): NormalizedScheduleDraft {
   const title = requiredString(value, 'title')
   const description = optionalString(value, 'description')
   const visibility = parseVisibility(value.visibility)
@@ -39,7 +84,6 @@ export function parseInboundScheduleRequest(
   )
   const inviteEmails = optionalStringArray(value, 'inviteEmails')
   const options = parseCandidates(value.candidates, durationMinutes)
-
   return normalizeScheduleDraft(
     {
       title,
@@ -53,6 +97,67 @@ export function parseInboundScheduleRequest(
     },
     now,
   )
+}
+
+function parseStandaloneDecision(
+  value: Record<string, unknown>,
+  now: number,
+): NormalizedStandaloneDecisionDraft {
+  if (value.candidates !== undefined) {
+    throw new Error('A decision request cannot include candidates.')
+  }
+  return normalizeStandaloneDecisionDraft(
+    {
+      title: requiredString(value, 'title'),
+      description: optionalString(value, 'description'),
+      visibility: parseVisibility(value.visibility),
+      selectMode: normalizeSelectMode(requiredString(value, 'selectMode')),
+      options: requiredStringArray(value, 'options'),
+      inviteEmails: optionalStringArray(value, 'inviteEmails'),
+      ...(value.closesAt !== undefined
+        ? { closesAt: parseTimestamp(requiredString(value, 'closesAt'), 'closesAt') }
+        : {}),
+    },
+    now,
+  )
+}
+
+function parseAttachedDecisions(
+  value: unknown,
+  now: number,
+): Array<NormalizedAttachedDecisionDraft> {
+  if (value === undefined) return []
+  if (!Array.isArray(value)) throw new Error('decisions must be an array.')
+  if (value.length > MAX_ATTACHED_DECISIONS) {
+    throw new Error('A schedule can include at most 20 attached decisions.')
+  }
+  return value.map((item, index) => {
+    if (!isRecord(item)) {
+      throw new Error(`decisions[${index}] must be an object.`)
+    }
+    if (item.visibility !== undefined || item.inviteEmails !== undefined) {
+      throw new Error(
+        `decisions[${index}] inherits access from the schedule and cannot set visibility or inviteEmails.`,
+      )
+    }
+    return normalizeAttachedDecisionDraft(
+      {
+        title: requiredString(item, 'title'),
+        description: optionalString(item, 'description'),
+        selectMode: normalizeSelectMode(requiredString(item, 'selectMode')),
+        options: requiredStringArray(item, 'options'),
+        ...(item.closesAt !== undefined
+          ? {
+              closesAt: parseTimestamp(
+                requiredString(item, 'closesAt'),
+                `decisions[${index}].closesAt`,
+              ),
+            }
+          : {}),
+      },
+      now,
+    )
+  })
 }
 
 function extractRequestJson(body: string): string {
@@ -139,6 +244,17 @@ function optionalStringArray(
 ): Array<string> {
   const item = value[field]
   if (item === undefined) return []
+  if (!Array.isArray(item) || item.some((entry) => typeof entry !== 'string')) {
+    throw new Error(`${field} must be an array of strings.`)
+  }
+  return item as Array<string>
+}
+
+function requiredStringArray(
+  value: Record<string, unknown>,
+  field: string,
+): Array<string> {
+  const item = value[field]
   if (!Array.isArray(item) || item.some((entry) => typeof entry !== 'string')) {
     throw new Error(`${field} must be an array of strings.`)
   }

@@ -98,6 +98,7 @@ function Landing() {
 function Dashboard() {
   const viewer = useQuery(api.users.viewer)
   const schedules = useQuery(api.schedules.listMine)
+  const decisions = useQuery(api.decisions.listMine)
   const calendar = useQuery(api.users.calendarStatus)
   const startCalendarConnect = useAction(api.calendar.startConnect)
 
@@ -125,6 +126,9 @@ function Dashboard() {
           <div {...stylex.props(styles.heroActions)}>
             <Link to="/new" {...stylex.props(styles.primaryLink)}>
               Create a schedule
+            </Link>
+            <Link to="/new/decision" {...stylex.props(styles.primaryLink)}>
+              Create a decision
             </Link>
             <span {...stylex.props(styles.signedIn)}>
               Signed in as {viewer?.email ?? '…'}
@@ -199,6 +203,38 @@ function Dashboard() {
                 <span {...stylex.props(styles.status)}>
                   {schedule.status.replace('_', ' ')}
                 </span>
+              </Link>
+            ))}
+          </div>
+          <div {...stylex.props(styles.panelHeader)}>
+            <div>
+              <span {...stylex.props(styles.panelLabel)}>Your decisions</span>
+              <h2 {...stylex.props(styles.panelTitle)}>Open questions</h2>
+            </div>
+            <Link to="/new/decision" {...stylex.props(styles.smallLink)}>
+              New
+            </Link>
+          </div>
+          {decisions === undefined && <p>Loading decisions…</p>}
+          {decisions?.length === 0 && (
+            <div {...stylex.props(styles.empty)}>
+              <span>No standalone decisions yet.</span>
+              <Link to="/new/decision">Ask the first one</Link>
+            </div>
+          )}
+          <div {...stylex.props(styles.scheduleList)}>
+            {decisions?.map((decision) => (
+              <Link
+                key={decision.id}
+                to="/d/$slug"
+                params={{ slug: decision.slug }}
+                {...stylex.props(styles.scheduleItem)}
+              >
+                <div {...stylex.props(styles.scheduleCopy)}>
+                  <strong>{decision.title}</strong>
+                  <span>{decision.selectMode}</span>
+                </div>
+                <span {...stylex.props(styles.status)}>{decision.status}</span>
               </Link>
             ))}
           </div>

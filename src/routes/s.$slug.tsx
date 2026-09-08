@@ -5,6 +5,7 @@ import { useAction, useMutation, useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import { AppShell } from '../components/AppShell'
 import { AuthGate } from '../components/AuthGate'
+import { DecisionPanel } from '../components/DecisionPanel'
 
 export const Route = createFileRoute('/s/$slug')({ component: SchedulePage })
 
@@ -23,6 +24,16 @@ function Schedule() {
   const calendar = useQuery(api.users.calendarStatus)
   const submitVote = useMutation(api.schedules.submitVote)
   const chooseFinal = useMutation(api.schedules.chooseFinal)
+  const createAttached = useMutation(api.decisions.createAttached)
+  const attached = useQuery(
+    api.decisions.listAttached,
+    schedule === undefined || schedule === null
+      ? 'skip'
+      : { scheduleId: schedule.id, now },
+  )
+  const [attachTitle, setAttachTitle] = useState('')
+  const [attachOptions, setAttachOptions] = useState('Thai, Pizza')
+  const [attachMode, setAttachMode] = useState<'single' | 'multi'>('single')
   const getBusyTimes = useAction(api.calendar.getBusyTimes)
   const [votes, setVotes] = useState<Record<string, boolean>>({})
   const [busy, setBusy] = useState<Array<{ startAt: number; endAt: number }>>([])
@@ -225,6 +236,80 @@ function Schedule() {
           </div>
         </aside>
       </div>
+      <section {...stylex.props(styles.attached)}>
+        <h2 {...stylex.props(styles.attachedTitle)}>Decisions for this event</h2>
+        {attached?.map((decision) => (
+          <DecisionPanel key={decision.id} decision={decision} />
+        ))}
+        {schedule.isHost && (
+          <form
+            {...stylex.props(styles.attachForm)}
+            onSubmit={(event) => {
+              event.preventDefault()
+              void (async () => {
+                setSaving(true)
+                setMessage(null)
+                try {
+                  await createAttached({
+                    scheduleId: schedule.id,
+                    title: attachTitle,
+                    selectMode: attachMode,
+                    options: attachOptions
+                      .split(/[\n,]/)
+                      .map((option) => option.trim())
+                      .filter(Boolean),
+                  })
+                  setAttachTitle('')
+                } catch (caught) {
+                  setMessage(
+                    caught instanceof Error
+                      ? caught.message
+                      : 'Could not add that decision.',
+                  )
+                } finally {
+                  setSaving(false)
+                }
+              })()
+            }}
+          >
+            <span {...stylex.props(styles.eyebrow)}>Add a decision</span>
+            <input
+              {...stylex.props(styles.attachInput)}
+              value={attachTitle}
+              onChange={(event) => setAttachTitle(event.target.value)}
+              placeholder="What do we eat?"
+              required
+              maxLength={120}
+            />
+            <input
+              {...stylex.props(styles.attachInput)}
+              value={attachOptions}
+              onChange={(event) => setAttachOptions(event.target.value)}
+              placeholder="Thai, Pizza, Sushi"
+              required
+            />
+            <div {...stylex.props(styles.attachActions)}>
+              <button
+                type="button"
+                {...stylex.props(styles.voteButton, attachMode === 'single' && styles.voteYes)}
+                onClick={() => setAttachMode('single')}
+              >
+                Single
+              </button>
+              <button
+                type="button"
+                {...stylex.props(styles.voteButton, attachMode === 'multi' && styles.voteYes)}
+                onClick={() => setAttachMode('multi')}
+              >
+                Multi
+              </button>
+              <button type="submit" disabled={saving} {...stylex.props(styles.confirmButton)}>
+                Add decision
+              </button>
+            </div>
+          </form>
+        )}
+      </section>
     </main>
   )
 }
@@ -279,4 +364,30 @@ const styles = stylex.create({
   inviteList: { marginTop: 12, display: 'flex', flexDirection: 'column', gap: 7 },
   invite: { display: 'flex', justifyContent: 'space-between', gap: 8, color: '#5a685f', fontSize: 11 },
   privacyCard: { color: '#40584a', backgroundColor: '#e8f0e8', lineHeight: 1.5, fontSize: 12 },
+  attached: { marginTop: 22, display: 'flex', flexDirection: 'column', gap: 14 },
+  attachedTitle: { margin: 0, color: '#203027', fontSize: 22 },
+  attachForm: {
+    padding: 20,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 10,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: '#c7d0c7',
+    backgroundColor: '#fffdf8',
+  },
+  attachInput: {
+    width: '100%',
+    minHeight: 42,
+    paddingInline: 12,
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: '#aeb9b0',
+    borderRadius: 11,
+    outline: 'none',
+    color: '#1f2b23',
+    backgroundColor: '#fbfcf9',
+  },
+  attachActions: { display: 'flex', flexWrap: 'wrap', gap: 8 },
 })

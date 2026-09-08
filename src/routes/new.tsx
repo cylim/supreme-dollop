@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { Link, createFileRoute } from '@tanstack/react-router'
 import * as stylex from '@stylexjs/stylex'
 import { AppShell } from '../components/AppShell'
 import { AuthGate } from '../components/AuthGate'
@@ -37,7 +37,8 @@ function ScheduleForm() {
         <h1 {...stylex.props(styles.title)}>Give the group good options.</h1>
         <p {...stylex.props(styles.lead)}>
           Add precise starts one by one, or turn a broad window into voteable
-          slots.
+          slots. For a labeled question,{' '}
+          <Link to="/new/decision">create a decision</Link>.
         </p>
       </div>
       <form

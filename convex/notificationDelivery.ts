@@ -1,4 +1,4 @@
-export type NotificationKind = 'invitation' | 'finalized'
+export type NotificationKind = 'invitation' | 'finalized' | 'decision_invitation'
 
 export type NotificationPayload = {
   slug: string
@@ -79,7 +79,8 @@ export async function deliverScheduleNotification(
     })
   }
 
-  const scheduleUrl = `${input.publicAppUrl.replace(/\/$/, '')}/s/${input.payload.slug}`
+  const path = input.kind === 'decision_invitation' ? 'd' : 's'
+  const targetUrl = `${input.publicAppUrl.replace(/\/$/, '')}/${path}/${input.payload.slug}`
   try {
     for (let index = 0; index < deliverable.length; index += 5) {
       const batch = deliverable.slice(index, index + 5)
@@ -90,7 +91,7 @@ export async function deliverScheduleNotification(
               input.kind,
               input.payload!,
               recipient,
-              scheduleUrl,
+              targetUrl,
               `${input.notificationRunId}:${recipient}`,
             ),
           ),
@@ -133,13 +134,21 @@ function buildMessage(
   kind: NotificationKind,
   payload: NotificationPayload,
   recipient: string,
-  scheduleUrl: string,
+  targetUrl: string,
   idempotencyKey: string,
 ): OutboundMessage {
   const chosenTime =
     payload.selectedStartAt === null || payload.selectedEndAt === null
       ? ''
       : `\n\nChosen time: ${new Date(payload.selectedStartAt).toISOString()} to ${new Date(payload.selectedEndAt).toISOString()} (${payload.timezone})`
+  if (kind === 'decision_invitation') {
+    return {
+      recipient,
+      subject: `Give your opinion on ${payload.title}`,
+      text: `You have been invited to a decision: ${payload.title}.\n\nOpen the decision: ${targetUrl}`,
+      idempotencyKey,
+    }
+  }
   return {
     recipient,
     subject:
@@ -148,8 +157,8 @@ function buildMessage(
         : `Confirmed: ${payload.title}`,
     text:
       kind === 'invitation'
-        ? `You have been invited to vote on a time for ${payload.title}.\n\nOpen the schedule: ${scheduleUrl}`
-        : `The host has confirmed the time for ${payload.title}.${chosenTime}\n\nView the schedule: ${scheduleUrl}`,
+        ? `You have been invited to vote on a time for ${payload.title}.\n\nOpen the schedule: ${targetUrl}`
+        : `The host has confirmed the time for ${payload.title}.${chosenTime}\n\nView the schedule: ${targetUrl}`,
     idempotencyKey,
   }
 }

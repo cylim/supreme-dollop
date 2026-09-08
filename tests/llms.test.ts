@@ -9,5 +9,7 @@ describe('llms.txt', () => {
     expect(text).toContain('END_JRNY_SELECT_REQUEST')
     expect(text).toContain('explicit UTC offset')
     expect(text).toContain('AgentMail event IDs are idempotent')
+    expect(text).toContain('"kind": "schedule"')
+    expect(text).toContain('"kind": "decision"')
   })
 })

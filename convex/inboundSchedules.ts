@@ -16,10 +16,7 @@ export const reply = internalAction({
     )
     if (payload === null || payload.status === 'pending') return null
     const appUrl = env.APP_URL?.replace(/\/$/, '')
-    const text =
-      payload.status === 'created' && payload.scheduleSlug && payload.scheduleTitle
-        ? `Created: ${payload.scheduleTitle}\n\nOpen the schedule: ${appUrl ?? ''}/s/${payload.scheduleSlug}`
-        : `Schedule request rejected: ${payload.errorMessage ?? 'The request was invalid.'}\n\nProtocol: ${appUrl ?? ''}/llms.txt`
+    const text = createdReply(payload, appUrl ?? '')
     const apiKey = env.AGENTMAIL_API_KEY
     const client = apiKey ? new AgentMailClient({ apiKey }) : null
     const replyStatus = await deliverInboundReply(
@@ -51,3 +48,34 @@ export const reply = internalAction({
     return null
   },
 })
+
+function createdReply(
+  payload: {
+    status: 'pending' | 'created' | 'rejected'
+    scheduleSlug: string | null
+    scheduleTitle: string | null
+    decisionSlug: string | null
+    decisionTitle: string | null
+    attachedDecisions: Array<{ slug: string; title: string }>
+    errorMessage: string | null
+  },
+  appUrl: string,
+): string {
+  if (payload.status !== 'created') {
+    return `Request rejected: ${payload.errorMessage ?? 'The request was invalid.'}\n\nProtocol: ${appUrl}/llms.txt`
+  }
+  const lines: Array<string> = []
+  if (payload.scheduleSlug && payload.scheduleTitle) {
+    lines.push(`Created: ${payload.scheduleTitle}`)
+    lines.push(`Open the schedule: ${appUrl}/s/${payload.scheduleSlug}`)
+    for (const decision of payload.attachedDecisions) {
+      lines.push(`${decision.title}: ${appUrl}/d/${decision.slug}`)
+    }
+  } else if (payload.decisionSlug && payload.decisionTitle) {
+    lines.push(`Created: ${payload.decisionTitle}`)
+    lines.push(`Open the decision: ${appUrl}/d/${payload.decisionSlug}`)
+  } else {
+    return `Created.\n\nProtocol: ${appUrl}/llms.txt`
+  }
+  return lines.join('\n\n')
+}

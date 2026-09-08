@@ -10,6 +10,7 @@ const secret = `whsec_${btoa('b'.repeat(32))}`
 
 function scheduleBody() {
   return `${scheduleRequestMarkers.start}\n${JSON.stringify({
+    kind: 'schedule',
     title: 'Created from inbound email',
     visibility: 'public',
     timezone: 'Asia/Kuala_Lumpur',
@@ -95,6 +96,67 @@ describe('inbound scheduling', () => {
       replyStatus: 'skipped',
     })
     expect(result.requests[0].body).toBeUndefined()
+  })
+
+  it('creates a schedule with attached decisions from one signed email', async () => {
+    const t = convexTest(schema, modules)
+    await t.run(async (ctx) => {
+      await ctx.db.insert('users', {
+        providerAccountId: 'google:host@example.test',
+        email: 'host@example.test',
+      })
+    })
+    const rawBody = JSON.stringify({
+      type: 'event',
+      event_type: 'message.received',
+      event_id: 'event-inbound-decisions',
+      message: {
+        inbox_id: 'schedule@agentmail.test',
+        message_id: 'message-inbound-decisions',
+        from: 'Host <host@example.test>',
+        text: `${scheduleRequestMarkers.start}\n${JSON.stringify({
+          kind: 'schedule',
+          title: 'Saturday dinner',
+          visibility: 'public',
+          timezone: 'Asia/Kuala_Lumpur',
+          durationMinutes: 60,
+          votingClosesAt: '2026-09-09T12:00:00+08:00',
+          candidates: {
+            exact: ['2026-09-10T19:00:00+08:00', '2026-09-10T20:00:00+08:00'],
+          },
+          decisions: [
+            {
+              title: 'What do we eat?',
+              selectMode: 'single',
+              options: ['Thai', 'Pizza'],
+            },
+          ],
+        })}\n${scheduleRequestMarkers.end}`,
+      },
+    })
+    const id = 'delivery-event-inbound-decisions'
+    const timestamp = new Date(now)
+    const signed = {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'svix-id': id,
+        'svix-timestamp': String(Math.floor(timestamp.getTime() / 1_000)),
+        'svix-signature': new Webhook(secret).sign(id, timestamp, rawBody),
+      },
+      body: rawBody,
+    }
+    expect((await t.fetch('/agentmail/webhook', signed)).status).toBe(200)
+    await t.finishAllScheduledFunctions(vi.runOnlyPendingTimers)
+    const result = await t.run(async (ctx) => {
+      const schedules = await ctx.db.query('schedules').take(10)
+      const decisions = await ctx.db.query('decisions').take(10)
+      return { schedules, decisions }
+    })
+    expect(result.schedules).toHaveLength(1)
+    expect(result.decisions).toHaveLength(1)
+    expect(result.decisions[0].title).toBe('What do we eat?')
+    expect(result.decisions[0].scheduleId).toBe(result.schedules[0]._id)
   })
 
   it('rejects unsigned webhook requests before writing data', async () => {

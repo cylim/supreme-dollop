@@ -12,7 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as E2eLoginRouteImport } from './routes/e2e-login'
 import { Route as NewRouteImport } from './routes/new'
+import { Route as NewDecisionRouteImport } from './routes/new.decision'
 import { Route as SSlugRouteImport } from './routes/s.$slug'
+import { Route as DSlugRouteImport } from './routes/d.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -29,9 +31,19 @@ const NewRoute = NewRouteImport.update({
   path: '/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NewDecisionRoute = NewDecisionRouteImport.update({
+  id: '/new/decision',
+  path: '/new/decision',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SSlugRoute = SSlugRouteImport.update({
   id: '/s/$slug',
   path: '/s/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DSlugRoute = DSlugRouteImport.update({
+  id: '/d/$slug',
+  path: '/d/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -39,34 +51,42 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/e2e-login': typeof E2eLoginRoute
   '/new': typeof NewRoute
+  '/new/decision': typeof NewDecisionRoute
   '/s/$slug': typeof SSlugRoute
+  '/d/$slug': typeof DSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/e2e-login': typeof E2eLoginRoute
   '/new': typeof NewRoute
+  '/new/decision': typeof NewDecisionRoute
   '/s/$slug': typeof SSlugRoute
+  '/d/$slug': typeof DSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/e2e-login': typeof E2eLoginRoute
   '/new': typeof NewRoute
+  '/new/decision': typeof NewDecisionRoute
   '/s/$slug': typeof SSlugRoute
+  '/d/$slug': typeof DSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/e2e-login' | '/new' | '/s/$slug'
+  fullPaths: '/' | '/e2e-login' | '/new' | '/new/decision' | '/s/$slug' | '/d/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/e2e-login' | '/new' | '/s/$slug'
-  id: '__root__' | '/' | '/e2e-login' | '/new' | '/s/$slug'
+  to: '/' | '/e2e-login' | '/new' | '/new/decision' | '/s/$slug' | '/d/$slug'
+  id: '__root__' | '/' | '/e2e-login' | '/new' | '/new/decision' | '/s/$slug' | '/d/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   E2eLoginRoute: typeof E2eLoginRoute
   NewRoute: typeof NewRoute
+  NewDecisionRoute: typeof NewDecisionRoute
   SSlugRoute: typeof SSlugRoute
+  DSlugRoute: typeof DSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -92,11 +112,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/new/decision': {
+      id: '/new/decision'
+      path: '/new/decision'
+      fullPath: '/new/decision'
+      preLoaderRoute: typeof NewDecisionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/s/$slug': {
       id: '/s/$slug'
       path: '/s/$slug'
       fullPath: '/s/$slug'
       preLoaderRoute: typeof SSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/d/$slug': {
+      id: '/d/$slug'
+      path: '/d/$slug'
+      fullPath: '/d/$slug'
+      preLoaderRoute: typeof DSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -106,7 +140,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   E2eLoginRoute: E2eLoginRoute,
   NewRoute: NewRoute,
+  NewDecisionRoute: NewDecisionRoute,
   SSlugRoute: SSlugRoute,
+  DSlugRoute: DSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -14,6 +14,8 @@ import type * as calendar from "../calendar.js";
 import type * as calendarConnection from "../calendarConnection.js";
 import type * as calendarModel from "../calendarModel.js";
 import type * as calendarTokenCipher from "../calendarTokenCipher.js";
+import type * as decisionLifecycle from "../decisionLifecycle.js";
+import type * as decisions from "../decisions.js";
 import type * as e2eAuthPolicy from "../e2eAuthPolicy.js";
 import type * as googleCalendarAdapter from "../googleCalendarAdapter.js";
 import type * as http from "../http.js";
@@ -41,6 +43,8 @@ declare const fullApi: ApiFromModules<{
   calendarConnection: typeof calendarConnection;
   calendarModel: typeof calendarModel;
   calendarTokenCipher: typeof calendarTokenCipher;
+  decisionLifecycle: typeof decisionLifecycle;
+  decisions: typeof decisions;
   e2eAuthPolicy: typeof e2eAuthPolicy;
   googleCalendarAdapter: typeof googleCalendarAdapter;
   http: typeof http;

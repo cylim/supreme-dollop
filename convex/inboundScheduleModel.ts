@@ -1,7 +1,8 @@
 import { v } from 'convex/values'
-import { parseInboundScheduleRequest } from '../shared/inboundScheduleRequest'
+import { parseInboundRequest } from '../shared/inboundScheduleRequest'
 import { internalMutation, internalQuery } from './_generated/server'
 import { internal } from './_generated/api'
+import { createAttachedFromDraft, createStandaloneDecision } from './decisionLifecycle'
 import { createSchedule } from './scheduleLifecycle'
 import type { Id } from './_generated/dataModel'
 import type { MutationCtx } from './_generated/server'
@@ -46,9 +47,9 @@ export const process = internalMutation({
     const request = await ctx.db.get('inboundScheduleRequests', args.requestId)
     if (request === null || request.status !== 'pending' || !request.body)
       return null
-    let draft
+    let parsed
     try {
-      draft = parseInboundScheduleRequest(request.body)
+      parsed = parseInboundRequest(request.body)
     } catch (error) {
       await ctx.db.patch('inboundScheduleRequests', request._id, {
         status: 'rejected',
@@ -79,13 +80,26 @@ export const process = internalMutation({
       await scheduleReply(ctx, request._id)
       return null
     }
-    const schedule = await createSchedule(ctx, host, draft)
-    await ctx.db.patch('inboundScheduleRequests', request._id, {
-      status: 'created',
-      scheduleId: schedule.id,
-      body: undefined,
-      processedAt: Date.now(),
-    })
+    if (parsed.kind === 'decision') {
+      const decision = await createStandaloneDecision(ctx, host, parsed.decision)
+      await ctx.db.patch('inboundScheduleRequests', request._id, {
+        status: 'created',
+        decisionId: decision.id,
+        body: undefined,
+        processedAt: Date.now(),
+      })
+    } else {
+      const schedule = await createSchedule(ctx, host, parsed.schedule)
+      for (const draft of parsed.decisions) {
+        await createAttachedFromDraft(ctx, host, schedule.id, draft)
+      }
+      await ctx.db.patch('inboundScheduleRequests', request._id, {
+        status: 'created',
+        scheduleId: schedule.id,
+        body: undefined,
+        processedAt: Date.now(),
+      })
+    }
     await scheduleReply(ctx, request._id)
     return null
   },
@@ -102,6 +116,11 @@ export const getReplyPayload = internalQuery({
       status: requestStatus,
       scheduleSlug: v.union(v.string(), v.null()),
       scheduleTitle: v.union(v.string(), v.null()),
+      decisionSlug: v.union(v.string(), v.null()),
+      decisionTitle: v.union(v.string(), v.null()),
+      attachedDecisions: v.array(
+        v.object({ slug: v.string(), title: v.string() }),
+      ),
       errorMessage: v.union(v.string(), v.null()),
     }),
     v.null(),
@@ -112,6 +131,15 @@ export const getReplyPayload = internalQuery({
     const schedule = request.scheduleId
       ? await ctx.db.get('schedules', request.scheduleId)
       : null
+    const decision = request.decisionId
+      ? await ctx.db.get('decisions', request.decisionId)
+      : null
+    const attached = schedule
+      ? await ctx.db
+          .query('decisions')
+          .withIndex('by_schedule', (query) => query.eq('scheduleId', schedule._id))
+          .take(20)
+      : []
     return {
       eventId: request.eventId,
       messageId: request.messageId,
@@ -120,6 +148,12 @@ export const getReplyPayload = internalQuery({
       status: request.status,
       scheduleSlug: schedule?.slug ?? null,
       scheduleTitle: schedule?.title ?? null,
+      decisionSlug: decision?.slug ?? null,
+      decisionTitle: decision?.title ?? null,
+      attachedDecisions: attached.map((item) => ({
+        slug: item.slug,
+        title: item.title,
+      })),
       errorMessage: request.errorMessage ?? null,
     }
   },
