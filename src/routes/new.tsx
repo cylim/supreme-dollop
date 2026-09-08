@@ -1,31 +1,12 @@
-import { useMemo, useState } from 'react'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import * as stylex from '@stylexjs/stylex'
-import { useMutation } from 'convex/react'
-import { api } from '../../convex/_generated/api'
 import { AppShell } from '../components/AppShell'
 import { AuthGate } from '../components/AuthGate'
-import type { FormEvent, KeyboardEvent } from 'react'
+import { useScheduleDraft } from '../scheduling/useScheduleDraft'
+import { candidateKey } from '../../shared/scheduleDraft'
+import type { KeyboardEvent } from 'react'
 
 export const Route = createFileRoute('/new')({ component: NewSchedulePage })
-
-type Candidate = {
-  key: string
-  startAt: number
-  endAt: number
-  source: 'exact' | 'range'
-}
-
-function toLocalInput(value: Date): string {
-  const local = new Date(value.getTime() - value.getTimezoneOffset() * 60_000)
-  return local.toISOString().slice(0, 16)
-}
-
-function initialDate(hoursAhead: number): string {
-  const date = new Date(Date.now() + hoursAhead * 60 * 60 * 1_000)
-  date.setMinutes(0, 0, 0)
-  return toLocalInput(date)
-}
 
 function NewSchedulePage() {
   return (
@@ -38,133 +19,15 @@ function NewSchedulePage() {
 }
 
 function ScheduleForm() {
-  const createSchedule = useMutation(api.schedules.create)
-  const navigate = useNavigate()
-  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [visibility, setVisibility] = useState<'public' | 'invited'>('public')
-  const [durationMinutes, setDurationMinutes] = useState(60)
-  const [deadline, setDeadline] = useState(initialDate(48))
-  const [exactStart, setExactStart] = useState(initialDate(24))
-  const [rangeStart, setRangeStart] = useState(initialDate(24))
-  const [rangeEnd, setRangeEnd] = useState(initialDate(28))
-  const [intervalMinutes, setIntervalMinutes] = useState(30)
-  const [candidateMode, setCandidateMode] = useState<'exact' | 'range'>('exact')
-  const [inviteEmails, setInviteEmails] = useState('')
-  const [candidates, setCandidates] = useState<Array<Candidate>>([])
-  const [error, setError] = useState<string | null>(null)
-  const [saving, setSaving] = useState(false)
-
-  const sortedCandidates = useMemo(
-    () => [...candidates].sort((a, b) => a.startAt - b.startAt),
-    [candidates],
-  )
-
-  const addCandidate = (candidate: Candidate) => {
-    setCandidates((current) => {
-      if (current.some((item) => item.key === candidate.key)) return current
-      return [...current, candidate].slice(0, 100)
-    })
-  }
-
-  const addExact = () => {
-    const startAt = new Date(exactStart).getTime()
-    if (!Number.isFinite(startAt)) return setError('Choose a valid exact time.')
-    const endAt = startAt + durationMinutes * 60_000
-    addCandidate({
-      key: `${startAt}:${endAt}`,
-      startAt,
-      endAt,
-      source: 'exact',
-    })
-    setError(null)
-  }
-
-  const addRange = () => {
-    const startAt = new Date(rangeStart).getTime()
-    const rangeEndsAt = new Date(rangeEnd).getTime()
-    if (
-      !Number.isFinite(startAt) ||
-      !Number.isFinite(rangeEndsAt) ||
-      rangeEndsAt <= startAt
-    ) {
-      return setError('Choose a range with an end after its start.')
-    }
-    const duration = durationMinutes * 60_000
-    const interval = intervalMinutes * 60_000
-    const generated: Array<Candidate> = []
-    for (
-      let cursor = startAt;
-      cursor + duration <= rangeEndsAt;
-      cursor += interval
-    ) {
-      generated.push({
-        key: `${cursor}:${cursor + duration}`,
-        startAt: cursor,
-        endAt: cursor + duration,
-        source: 'range',
-      })
-      if (generated.length > 100) break
-    }
-    if (generated.length === 0)
-      return setError('The range is shorter than the event duration.')
-    if (generated.length > 100)
-      return setError(
-        'That range creates more than 100 choices. Narrow it or increase the step.',
-      )
-    setCandidates((current) => {
-      const byKey = new Map(current.map((item) => [item.key, item]))
-      for (const item of generated) byKey.set(item.key, item)
-      return Array.from(byKey.values()).slice(0, 100)
-    })
-    setError(null)
-  }
+  const draft = useScheduleDraft()
+  const { fields } = draft
 
   const moveCandidateTab = (event: KeyboardEvent<HTMLButtonElement>) => {
     if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return
     event.preventDefault()
-    const nextMode = candidateMode === 'exact' ? 'range' : 'exact'
-    setCandidateMode(nextMode)
+    const nextMode = fields.candidateMode === 'exact' ? 'range' : 'exact'
+    draft.update('candidateMode', nextMode)
     document.getElementById(`candidate-${nextMode}-tab`)?.focus()
-  }
-
-  const submit = async (event: FormEvent) => {
-    event.preventDefault()
-    setError(null)
-    if (candidates.length < 2)
-      return setError('Add at least two candidate times.')
-    setSaving(true)
-    try {
-      const result = await createSchedule({
-        title,
-        ...(description.trim() ? { description } : {}),
-        visibility,
-        timezone,
-        durationMinutes,
-        votingClosesAt: new Date(deadline).getTime(),
-        options: sortedCandidates.map(({ startAt, endAt, source }) => ({
-          startAt,
-          endAt,
-          source,
-        })),
-        inviteEmails:
-          visibility === 'invited'
-            ? inviteEmails
-                .split(/[\n,;]/)
-                .map((email) => email.trim())
-                .filter(Boolean)
-            : [],
-      })
-      await navigate({ to: '/s/$slug', params: { slug: result.slug } })
-    } catch (caught) {
-      setError(
-        caught instanceof Error
-          ? caught.message
-          : 'Could not create the schedule.',
-      )
-      setSaving(false)
-    }
   }
 
   return (
@@ -179,7 +42,7 @@ function ScheduleForm() {
       </div>
       <form
         {...stylex.props(styles.form)}
-        onSubmit={(event) => void submit(event)}
+        onSubmit={(event) => void draft.submit(event)}
       >
         <section {...stylex.props(styles.card)}>
           <span {...stylex.props(styles.step)}>01 · The occasion</span>
@@ -187,8 +50,8 @@ function ScheduleForm() {
             Event title
             <input
               {...stylex.props(styles.input)}
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
+              value={fields.title}
+              onChange={(event) => draft.update('title', event.target.value)}
               required
               maxLength={120}
               placeholder="Quarterly planning"
@@ -199,8 +62,8 @@ function ScheduleForm() {
             <span {...stylex.props(styles.optional)}>optional</span>
             <textarea
               {...stylex.props(styles.textarea)}
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
+              value={fields.description}
+              onChange={(event) => draft.update('description', event.target.value)}
               maxLength={1000}
               placeholder="What should people know before voting?"
             />
@@ -210,9 +73,9 @@ function ScheduleForm() {
               Duration
               <select
                 {...stylex.props(styles.input)}
-                value={durationMinutes}
+                value={fields.durationMinutes}
                 onChange={(event) =>
-                  setDurationMinutes(Number(event.target.value))
+                  draft.update('durationMinutes', Number(event.target.value))
                 }
               >
                 <option value={30}>30 minutes</option>
@@ -227,14 +90,14 @@ function ScheduleForm() {
               <input
                 type="datetime-local"
                 {...stylex.props(styles.input)}
-                value={deadline}
-                onChange={(event) => setDeadline(event.target.value)}
+                value={fields.deadline}
+                onChange={(event) => draft.update('deadline', event.target.value)}
                 required
               />
             </label>
           </div>
           <p {...stylex.props(styles.hint)}>
-            Times use {timezone} while you edit. Voters see their local
+            Times use {draft.timezone} while you edit. Voters see their local
             timezone.
           </p>
         </section>
@@ -250,14 +113,14 @@ function ScheduleForm() {
               id="candidate-exact-tab"
               type="button"
               role="tab"
-              aria-selected={candidateMode === 'exact'}
+              aria-selected={fields.candidateMode === 'exact'}
               aria-controls="candidate-exact-panel"
-              tabIndex={candidateMode === 'exact' ? 0 : -1}
+              tabIndex={fields.candidateMode === 'exact' ? 0 : -1}
               {...stylex.props(
                 styles.modeTab,
-                candidateMode === 'exact' && styles.modeTabActive,
+                fields.candidateMode === 'exact' && styles.modeTabActive,
               )}
-              onClick={() => setCandidateMode('exact')}
+              onClick={() => draft.update('candidateMode', 'exact')}
               onKeyDown={moveCandidateTab}
             >
               Exact time
@@ -266,20 +129,20 @@ function ScheduleForm() {
               id="candidate-range-tab"
               type="button"
               role="tab"
-              aria-selected={candidateMode === 'range'}
+              aria-selected={fields.candidateMode === 'range'}
               aria-controls="candidate-range-panel"
-              tabIndex={candidateMode === 'range' ? 0 : -1}
+              tabIndex={fields.candidateMode === 'range' ? 0 : -1}
               {...stylex.props(
                 styles.modeTab,
-                candidateMode === 'range' && styles.modeTabActive,
+                fields.candidateMode === 'range' && styles.modeTabActive,
               )}
-              onClick={() => setCandidateMode('range')}
+              onClick={() => draft.update('candidateMode', 'range')}
               onKeyDown={moveCandidateTab}
             >
               Rough window
             </button>
           </div>
-          {candidateMode === 'exact' ? (
+          {fields.candidateMode === 'exact' ? (
             <div
               id="candidate-exact-panel"
               role="tabpanel"
@@ -291,13 +154,13 @@ function ScheduleForm() {
               <input
                 type="datetime-local"
                 {...stylex.props(styles.input)}
-                value={exactStart}
-                onChange={(event) => setExactStart(event.target.value)}
+                value={fields.exactStart}
+                onChange={(event) => draft.update('exactStart', event.target.value)}
               />
               <button
                 type="button"
                 {...stylex.props(styles.secondaryButton)}
-                onClick={addExact}
+                onClick={draft.addExact}
               >
                 Add exact time
               </button>
@@ -316,22 +179,22 @@ function ScheduleForm() {
               <input
                 type="datetime-local"
                 {...stylex.props(styles.input)}
-                value={rangeStart}
-                onChange={(event) => setRangeStart(event.target.value)}
+                value={fields.rangeStart}
+                onChange={(event) => draft.update('rangeStart', event.target.value)}
               />
               <input
                 type="datetime-local"
                 {...stylex.props(styles.input)}
-                value={rangeEnd}
-                onChange={(event) => setRangeEnd(event.target.value)}
+                value={fields.rangeEnd}
+                onChange={(event) => draft.update('rangeEnd', event.target.value)}
               />
               <label {...stylex.props(styles.compactLabel)}>
                 Start every
                 <select
                   {...stylex.props(styles.compactSelect)}
-                  value={intervalMinutes}
+                  value={fields.intervalMinutes}
                   onChange={(event) =>
-                    setIntervalMinutes(Number(event.target.value))
+                    draft.update('intervalMinutes', Number(event.target.value))
                   }
                 >
                   <option value={15}>15 min</option>
@@ -342,7 +205,7 @@ function ScheduleForm() {
               <button
                 type="button"
                 {...stylex.props(styles.secondaryButton)}
-                onClick={addRange}
+                onClick={draft.addRange}
               >
                 Generate from range
               </button>
@@ -350,17 +213,17 @@ function ScheduleForm() {
           )}
           <div {...stylex.props(styles.candidateList)}>
             <div {...stylex.props(styles.listHeader)}>
-              <strong>{sortedCandidates.length} candidates</strong>
+              <strong>{draft.candidates.length} candidates</strong>
               <button
                 type="button"
                 {...stylex.props(styles.textButton)}
-                onClick={() => setCandidates([])}
+                onClick={draft.clearCandidates}
               >
                 Clear
               </button>
             </div>
-            {sortedCandidates.map((candidate) => (
-              <div key={candidate.key} {...stylex.props(styles.candidate)}>
+            {draft.candidates.map((candidate) => (
+              <div key={candidateKey(candidate)} {...stylex.props(styles.candidate)}>
                 <div>
                   <strong>{formatDate(candidate.startAt)}</strong>
                   <span>
@@ -372,11 +235,7 @@ function ScheduleForm() {
                   type="button"
                   aria-label="Remove candidate"
                   {...stylex.props(styles.removeButton)}
-                  onClick={() =>
-                    setCandidates((current) =>
-                      current.filter((item) => item.key !== candidate.key),
-                    )
-                  }
+                  onClick={() => draft.removeCandidate(candidate)}
                 >
                   ×
                 </button>
@@ -392,9 +251,9 @@ function ScheduleForm() {
               type="button"
               {...stylex.props(
                 styles.choice,
-                visibility === 'public' && styles.choiceActive,
+                fields.visibility === 'public' && styles.choiceActive,
               )}
-              onClick={() => setVisibility('public')}
+              onClick={() => draft.update('visibility', 'public')}
             >
               <strong>Public link</strong>
               <span>Any signed-in user with the link</span>
@@ -403,38 +262,38 @@ function ScheduleForm() {
               type="button"
               {...stylex.props(
                 styles.choice,
-                visibility === 'invited' && styles.choiceActive,
+                fields.visibility === 'invited' && styles.choiceActive,
               )}
-              onClick={() => setVisibility('invited')}
+              onClick={() => draft.update('visibility', 'invited')}
             >
               <strong>Invite only</strong>
               <span>Restricted to listed Google emails</span>
             </button>
           </div>
-          {visibility === 'invited' && (
+          {fields.visibility === 'invited' && (
             <label {...stylex.props(styles.label)}>
               Guest emails
               <textarea
                 {...stylex.props(styles.textarea)}
-                value={inviteEmails}
-                onChange={(event) => setInviteEmails(event.target.value)}
+                value={fields.inviteEmails}
+                onChange={(event) => draft.update('inviteEmails', event.target.value)}
                 placeholder={'alex@example.com\njamie@example.com'}
               />
             </label>
           )}
         </section>
 
-        {error && (
+        {draft.error && (
           <p role="alert" {...stylex.props(styles.error)}>
-            {error}
+            {draft.error}
           </p>
         )}
         <button
           type="submit"
-          disabled={saving}
+          disabled={draft.saving}
           {...stylex.props(styles.submitButton)}
         >
-          {saving ? 'Creating…' : 'Open voting'}
+          {draft.saving ? 'Creating…' : 'Open voting'}
         </button>
       </form>
     </main>

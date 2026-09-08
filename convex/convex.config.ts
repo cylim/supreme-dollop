@@ -15,6 +15,7 @@ const app = defineApp({
     APP_URL: v.optional(v.string()),
     AGENTMAIL_API_KEY: v.optional(v.string()),
     AGENTMAIL_INBOX_ID: v.optional(v.string()),
+    AGENTMAIL_WEBHOOK_SECRET: v.optional(v.string()),
     CALENDAR_TOKEN_ENCRYPTION_KEY: v.optional(v.string()),
     E2E_PASSWORD_AUTH_ENABLED: v.optional(v.string()),
     E2E_TEST_EMAILS: v.optional(v.string()),

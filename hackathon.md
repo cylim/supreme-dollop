@@ -1,8 +1,8 @@
 # Hackathon log
 
-- **Project:** JRNY Select
+- **Project:** JRNY Plan
 - **Event:** Convex All Gas Hackathon
-- **What it does:** Helps signed-in groups propose exact times or broad ranges, vote on availability, and let the host confirm the best event time.
+- **What it does:** Helps signed-in groups create schedules in the app or by structured email, vote on availability, and let the host confirm the best event time.
 - **Live app:** https://flippant-bat-602.convex.site
 - **Repo:** https://github.com/cylim/supreme-dollop
 - **Frontend:** Convex static hosting
@@ -12,7 +12,7 @@
 - **Auth:** Convex Auth
 - **AI models:** none
 - **Started:** 2026-09-05T11:58:05Z
-- **Last updated:** 2026-09-07T06:41:49Z
+- **Last updated:** 2026-09-08T04:43:07Z
 
 ## Log
 
@@ -25,7 +25,7 @@ Selected Convex static hosting for the frontend. The app is not configured or
 deployed yet.
 
 ### 2026-09-07 - b0968ed
-Built JRNY Select with TanStack Start and StyleX: authenticated public and
+Built JRNY Plan with TanStack Start and StyleX: authenticated public and
 invite-only schedules, exact-time and range-generated candidates, realtime
 availability voting, best-overlap recommendations, and host-approved
 finalization. Added Google Calendar busy-time checks and queued AgentMail
@@ -43,7 +43,7 @@ window tabs, and added a second schedule-creation call to action before the
 landing footer (`src/routes/new.tsx`, `src/routes/index.tsx`,
 `src/components/AuthGate.tsx`).
 
-### 2026-09-07 - working tree
+### 2026-09-07 - ee2f924
 Added gated test-only password accounts and Playwright coverage for three-user
 invite-only and public scheduling flows. Both browser scenarios now pass through
 schedule creation, voting, and live best-overlap ranking; the invited flow also
@@ -52,3 +52,11 @@ changed its time argument and never left the loading state. AgentMail now skips
 configured test recipients before creating the delivery client, with policy
 tests covering suppression (`e2e/scheduling.spec.ts`, `src/routes/s.$slug.tsx`,
 `convex/auth.ts`, `convex/notifications.ts`).
+
+### 2026-09-08 - working tree
+Refactored schedule lifecycle, draft generation, AgentMail delivery, and Google
+Calendar token handling into deeper tested modules. Added idempotent schedule
+creation from signed AgentMail webhooks, a deterministic `/llms.txt` email
+protocol, and reply suppression for test recipients. Typecheck, lint, production
+build, 20 unit/integration tests, and both three-user browser flows pass locally
+(`convex`, `shared`, `src/scheduling`, `tests`, `public/llms.txt`).

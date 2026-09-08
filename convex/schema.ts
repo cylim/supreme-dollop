@@ -14,7 +14,9 @@ export default defineSchema({
     email: v.string(),
     name: v.optional(v.string()),
     picture: v.optional(v.string()),
-  }).index('by_provider_account_id', ['providerAccountId']),
+  })
+    .index('by_provider_account_id', ['providerAccountId'])
+    .index('by_email', ['email']),
 
   schedules: defineTable({
     hostId: v.id('users'),
@@ -96,4 +98,27 @@ export default defineSchema({
     attemptedAt: v.optional(v.number()),
     errorCode: v.optional(v.string()),
   }).index('by_schedule_and_kind', ['scheduleId', 'kind']),
+
+  inboundScheduleRequests: defineTable({
+    eventId: v.string(),
+    messageId: v.string(),
+    inboxId: v.string(),
+    senderEmail: v.string(),
+    body: v.optional(v.string()),
+    status: v.union(
+      v.literal('pending'),
+      v.literal('created'),
+      v.literal('rejected'),
+    ),
+    scheduleId: v.optional(v.id('schedules')),
+    errorCode: v.optional(v.string()),
+    errorMessage: v.optional(v.string()),
+    replyStatus: v.optional(
+      v.union(v.literal('sent'), v.literal('failed'), v.literal('skipped')),
+    ),
+    receivedAt: v.number(),
+    processedAt: v.optional(v.number()),
+  })
+    .index('by_event_id', ['eventId'])
+    .index('by_message_id', ['messageId']),
 })

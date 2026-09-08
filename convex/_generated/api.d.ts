@@ -8,15 +8,23 @@
  * @module
  */
 
+import type * as agentMailWebhook from "../agentMailWebhook.js";
 import type * as auth from "../auth.js";
 import type * as calendar from "../calendar.js";
+import type * as calendarConnection from "../calendarConnection.js";
 import type * as calendarModel from "../calendarModel.js";
+import type * as calendarTokenCipher from "../calendarTokenCipher.js";
 import type * as e2eAuthPolicy from "../e2eAuthPolicy.js";
+import type * as googleCalendarAdapter from "../googleCalendarAdapter.js";
 import type * as http from "../http.js";
+import type * as inboundScheduleModel from "../inboundScheduleModel.js";
+import type * as inboundSchedules from "../inboundSchedules.js";
+import type * as llms from "../llms.js";
 import type * as model from "../model.js";
+import type * as notificationDelivery from "../notificationDelivery.js";
 import type * as notificationModel from "../notificationModel.js";
-import type * as notificationPolicy from "../notificationPolicy.js";
 import type * as notifications from "../notifications.js";
+import type * as scheduleLifecycle from "../scheduleLifecycle.js";
 import type * as schedules from "../schedules.js";
 import type * as users from "../users.js";
 
@@ -27,15 +35,23 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  agentMailWebhook: typeof agentMailWebhook;
   auth: typeof auth;
   calendar: typeof calendar;
+  calendarConnection: typeof calendarConnection;
   calendarModel: typeof calendarModel;
+  calendarTokenCipher: typeof calendarTokenCipher;
   e2eAuthPolicy: typeof e2eAuthPolicy;
+  googleCalendarAdapter: typeof googleCalendarAdapter;
   http: typeof http;
+  inboundScheduleModel: typeof inboundScheduleModel;
+  inboundSchedules: typeof inboundSchedules;
+  llms: typeof llms;
   model: typeof model;
+  notificationDelivery: typeof notificationDelivery;
   notificationModel: typeof notificationModel;
-  notificationPolicy: typeof notificationPolicy;
   notifications: typeof notifications;
+  scheduleLifecycle: typeof scheduleLifecycle;
   schedules: typeof schedules;
   users: typeof users;
 }>;

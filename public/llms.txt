@@ -1,0 +1,11 @@
+# JRNY Plan
+
+JRNY Plan creates group scheduling links and collects complete availability ballots.
+
+The deployed `/llms.txt` endpoint publishes the configured scheduling inbox and complete machine-readable email protocol. Email scheduling is available only when that endpoint names an email destination.
+
+Send a plain-text email with subject `Create schedule`. The sender must already have a verified JRNY Plan account with the same address. Put one JSON object between `JRNY_SELECT_REQUEST_V1` and `END_JRNY_SELECT_REQUEST`.
+
+Required JSON fields: `title`, `visibility`, `timezone`, `durationMinutes`, `votingClosesAt`, and `candidates`. Use ISO 8601 timestamps with `Z` or an explicit UTC offset. Use either `candidates.exact` or `candidates.range`, never both. Invited schedules also require `inviteEmails`.
+
+Completion is an email reply containing the schedule URL. A validation reply means no schedule was created. Retrying one AgentMail event does not create a duplicate.
