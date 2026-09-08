@@ -21,7 +21,7 @@ export const Route = createRootRouteWithContext<{
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'JRNY Select — find the time that works',
+        title: 'JRNY Plan — find the time that works',
       },
     ],
     links: [

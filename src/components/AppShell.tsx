@@ -14,8 +14,14 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div {...stylex.props(styles.page)}>
       <header {...stylex.props(styles.header)}>
         <Link to="/" {...stylex.props(styles.brand)}>
-          <span {...stylex.props(styles.mark)}>J</span>
-          <span>JRNY Select</span>
+          <img
+            src="/jrny-plan-mark.png"
+            alt=""
+            width="34"
+            height="34"
+            {...stylex.props(styles.mark)}
+          />
+          <span>JRNY Plan</span>
         </Link>
         <nav {...stylex.props(styles.nav)} aria-label="Primary navigation">
           {isAuthenticated && (
@@ -65,7 +71,7 @@ const styles = stylex.create({
     display: 'inline-flex',
     alignItems: 'center',
     gap: 10,
-    color: '#17251d',
+    color: '#2f1b4e',
     textDecoration: 'none',
     fontSize: 17,
     fontWeight: 760,
@@ -74,12 +80,8 @@ const styles = stylex.create({
   mark: {
     width: 34,
     height: 34,
-    borderRadius: 11,
-    display: 'grid',
-    placeItems: 'center',
-    color: '#effff4',
-    backgroundColor: '#17633a',
-    boxShadow: '0 5px 14px rgba(23, 99, 58, 0.2)',
+    display: 'block',
+    objectFit: 'contain',
   },
   nav: {
     display: 'flex',

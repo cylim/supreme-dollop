@@ -1,1 +1,1 @@
-# supreme-dollop
+# JRNY Plan

@@ -26,8 +26,8 @@ function Landing() {
             <span {...stylex.props(styles.heroAccent)}>Make the call.</span>
           </h1>
           <p {...stylex.props(styles.heroText)}>
-            Offer exact times or a broad window. Everyone votes once, JRNY ranks
-            the overlap, and the host makes the final call.
+            Offer exact times or a broad window. Everyone votes once, JRNY Plan
+            ranks the overlap, and the host makes the final call.
           </p>
           <div id="get-started" {...stylex.props(styles.landingAction)}>
             <SignInAction label="Start scheduling with Google" />
@@ -119,8 +119,8 @@ function Dashboard() {
             <span {...stylex.props(styles.heroAccent)}>Make the call.</span>
           </h1>
           <p {...stylex.props(styles.heroText)}>
-            Offer exact times or a broad window. Everyone votes once, JRNY ranks
-            the overlap, and you choose the final plan.
+            Offer exact times or a broad window. Everyone votes once, JRNY Plan
+            ranks the overlap, and you choose the final plan.
           </p>
           <div {...stylex.props(styles.heroActions)}>
             <Link to="/new" {...stylex.props(styles.primaryLink)}>
@@ -144,7 +144,7 @@ function Dashboard() {
           </h2>
           <p {...stylex.props(styles.panelText)}>
             We only request free/busy access. Event titles and details never
-            enter JRNY.
+            enter JRNY Plan.
           </p>
           {!calendar?.connected ? (
             <button

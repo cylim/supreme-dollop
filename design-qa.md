@@ -22,7 +22,7 @@ The combined candidate comparison checks the most detailed region because it con
 
 - **Fonts and typography:** Existing app type family and weights are preserved. Section labels, editor headings, supporting copy, controls, and buttons retain the source hierarchy and readable mobile wrapping.
 - **Spacing and layout rhythm:** Card padding and radii remain consistent. The selected panel aligns with the tab list, candidate count remains separated below it, and both mobile views are free of horizontal overflow.
-- **Colors and visual tokens:** Cream, forest green, muted green-gray, pale editor green, and border colors remain consistent with the source and the rest of JRNY Select.
+- **Colors and visual tokens:** Cream, forest green, muted green-gray, pale editor green, and border colors remain consistent with the source and the rest of JRNY Plan.
 - **Image quality and asset fidelity:** No image assets are required for these controls. Existing text and UI controls remain code-native; no placeholder or recreated artwork was introduced.
 - **Copy and content:** Exact time, Rough window, editor guidance, actions, and candidate controls are preserved. The new closing CTA clearly repeats the primary schedule-creation action without introducing a second flow.
 
