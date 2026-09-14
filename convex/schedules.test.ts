@@ -1,19 +1,18 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import {  convexTest } from 'convex-test'
-import schema from '../convex/schema'
-import { api, internal } from '../convex/_generated/api'
-import type {TestConvex} from 'convex-test';
-import type { Id } from '../convex/_generated/dataModel'
+/// <reference types="vite/client" />
 
-const modules = import.meta.glob('../convex/**/*.ts')
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { convexTest } from 'convex-test'
+import schema from './schema'
+import { api, internal } from './_generated/api'
+import type { TestConvex } from 'convex-test'
+import type { Id } from './_generated/dataModel'
+
+const modules = import.meta.glob('./**/*.ts')
 const now = Date.UTC(2026, 8, 7, 12)
 
 type TestBackend = TestConvex<typeof schema>
 
-async function insertUser(
-  t: TestBackend,
-  email: string,
-): Promise<Id<'users'>> {
+async function insertUser(t: TestBackend, email: string): Promise<Id<'users'>> {
   return await t.run(async (ctx) =>
     ctx.db.insert('users', {
       providerAccountId: `google:${email}`,
@@ -76,8 +75,9 @@ describe('scheduling and voting', () => {
     const invitee = asUser(t, inviteeId, 'guest@example.test')
     const outsider = asUser(t, outsiderId, 'outsider@example.test')
 
-    await expect(t.mutation(api.schedules.create, scheduleInput('public')))
-      .rejects.toThrow(/signed in/i)
+    await expect(
+      t.mutation(api.schedules.create, scheduleInput('public')),
+    ).rejects.toThrow(/signed in/i)
 
     const created = await host.mutation(
       api.schedules.create,
@@ -229,7 +229,10 @@ describe('scheduling and voting', () => {
     const voterId = await insertUser(t, 'voter@example.test')
     const host = asUser(t, hostId, 'host@example.test')
     const voter = asUser(t, voterId, 'voter@example.test')
-    const first = await host.mutation(api.schedules.create, scheduleInput('public'))
+    const first = await host.mutation(
+      api.schedules.create,
+      scheduleInput('public'),
+    )
     const second = await host.mutation(api.schedules.create, {
       ...scheduleInput('public'),
       title: 'Second schedule',
@@ -252,5 +255,69 @@ describe('scheduling and voting', () => {
         ],
       }),
     ).rejects.toThrow(/does not belong/i)
+  })
+
+  it('enforces authentication, missing resources, deadlines, and finalization replay', async () => {
+    const t = convexTest(schema, modules)
+    const hostId = await insertUser(t, 'host@example.test')
+    const participantId = await insertUser(t, 'guest@example.test')
+    const host = asUser(t, hostId, 'host@example.test')
+    const participant = asUser(t, participantId, 'guest@example.test')
+    const created = await host.mutation(
+      api.schedules.create,
+      scheduleInput('public'),
+    )
+    const view = await participant.query(api.schedules.getBySlug, {
+      slug: created.slug,
+      now,
+    })
+    const responses = view!.options.map((option) => ({
+      optionId: option.id,
+      available: true,
+    }))
+
+    await expect(t.query(api.schedules.listMine, {})).rejects.toThrow(
+      /signed in/i,
+    )
+    await expect(
+      t.mutation(api.schedules.submitVote, {
+        scheduleId: created.id,
+        responses,
+      }),
+    ).rejects.toThrow(/signed in/i)
+    await expect(
+      t.mutation(api.schedules.chooseFinal, {
+        scheduleId: created.id,
+        optionId: view!.options[0].id,
+      }),
+    ).rejects.toThrow(/signed in/i)
+    expect(
+      await host.query(api.schedules.getBySlug, {
+        slug: 'missing-schedule',
+        now,
+      }),
+    ).toBeNull()
+
+    vi.setSystemTime(now + 86_400_001)
+    await expect(
+      participant.mutation(api.schedules.submitVote, {
+        scheduleId: created.id,
+        responses,
+      }),
+    ).rejects.toThrow(/closed/i)
+
+    await t.mutation(internal.schedules.closeVoting, {
+      scheduleId: created.id,
+    })
+    await host.mutation(api.schedules.chooseFinal, {
+      scheduleId: created.id,
+      optionId: view!.options[0].id,
+    })
+    await expect(
+      host.mutation(api.schedules.chooseFinal, {
+        scheduleId: created.id,
+        optionId: view!.options[0].id,
+      }),
+    ).rejects.toThrow(/voting must close/i)
   })
 })

@@ -14,7 +14,9 @@ import type * as calendar from "../calendar.js";
 import type * as calendarConnection from "../calendarConnection.js";
 import type * as calendarModel from "../calendarModel.js";
 import type * as calendarTokenCipher from "../calendarTokenCipher.js";
+import type * as decisionAccess from "../decisionAccess.js";
 import type * as decisionLifecycle from "../decisionLifecycle.js";
+import type * as decisionReadModel from "../decisionReadModel.js";
 import type * as decisions from "../decisions.js";
 import type * as e2eAuthPolicy from "../e2eAuthPolicy.js";
 import type * as googleCalendarAdapter from "../googleCalendarAdapter.js";
@@ -28,6 +30,7 @@ import type * as notificationModel from "../notificationModel.js";
 import type * as notifications from "../notifications.js";
 import type * as scheduleLifecycle from "../scheduleLifecycle.js";
 import type * as schedules from "../schedules.js";
+import type * as testing from "../testing.js";
 import type * as users from "../users.js";
 
 import type {
@@ -43,7 +46,9 @@ declare const fullApi: ApiFromModules<{
   calendarConnection: typeof calendarConnection;
   calendarModel: typeof calendarModel;
   calendarTokenCipher: typeof calendarTokenCipher;
+  decisionAccess: typeof decisionAccess;
   decisionLifecycle: typeof decisionLifecycle;
+  decisionReadModel: typeof decisionReadModel;
   decisions: typeof decisions;
   e2eAuthPolicy: typeof e2eAuthPolicy;
   googleCalendarAdapter: typeof googleCalendarAdapter;
@@ -57,6 +62,7 @@ declare const fullApi: ApiFromModules<{
   notifications: typeof notifications;
   scheduleLifecycle: typeof scheduleLifecycle;
   schedules: typeof schedules;
+  testing: typeof testing;
   users: typeof users;
 }>;
 

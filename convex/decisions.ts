@@ -7,14 +7,16 @@ import {
   createAttachedDecision,
   createStandaloneDecision,
   hostCloseDecision,
-  listAttachedDecisions,
-  listHostedStandalone,
-  readDecision,
   removeDecisionOption,
   renameDecisionOption,
   submitDecisionBallot,
   updateDecision,
 } from './decisionLifecycle'
+import {
+  listAttachedDecisions,
+  listHostedStandalone,
+  readDecision,
+} from './decisionReadModel'
 
 const selectMode = v.union(v.literal('single'), v.literal('multi'))
 const status = v.union(v.literal('open'), v.literal('closed'))
@@ -41,7 +43,7 @@ const decisionView = v.object({
   closesAt: v.union(v.number(), v.null()),
   status,
   isHost: v.boolean(),
-  canVote: v.boolean(),
+  canSubmitBallot: v.boolean(),
   options: v.array(optionView),
   invitations: v.array(v.object({ email: v.string() })),
   participantCount: v.number(),
@@ -88,17 +90,18 @@ export const createAttached = mutation({
 export const listMine = query({
   args: {},
   returns: v.array(summary),
-  handler: async (ctx) => listHostedStandalone(ctx, (await requireUser(ctx))._id),
+  handler: async (ctx) =>
+    listHostedStandalone(ctx, (await requireUser(ctx))._id),
 })
 
 export const getBySlug = query({
-  args: { slug: v.string(), now: v.number() },
+  args: { slug: v.string() },
   returns: v.union(decisionView, v.null()),
   handler: async (ctx, args) => readDecision(ctx, args, await requireUser(ctx)),
 })
 
 export const listAttached = query({
-  args: { scheduleId: v.id('schedules'), now: v.number() },
+  args: { scheduleId: v.id('schedules') },
   returns: v.array(decisionView),
   handler: async (ctx, args) =>
     listAttachedDecisions(ctx, args, await requireUser(ctx)),

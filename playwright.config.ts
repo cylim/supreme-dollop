@@ -11,7 +11,7 @@ export default defineConfig({
   fullyParallel: false,
   timeout: 60_000,
   forbidOnly: Boolean(process.env.CI),
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env.CI ? 1 : 0,
   reporter: 'line',
   use: {
     baseURL: process.env.E2E_BASE_URL,
@@ -19,9 +19,37 @@ export default defineConfig({
     trace: 'off',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
-    timezoneId: 'Asia/Kuala_Lumpur',
-    ...devices['Desktop Chrome'],
   },
+  projects: [
+    {
+      name: 'chromium-desktop',
+      use: {
+        ...devices['Desktop Chrome'],
+        timezoneId: 'Asia/Kuala_Lumpur',
+      },
+    },
+    {
+      name: 'chromium-mobile',
+      use: {
+        ...devices['Pixel 7'],
+        timezoneId: 'America/New_York',
+      },
+    },
+    {
+      name: 'firefox-desktop',
+      use: {
+        ...devices['Desktop Firefox'],
+        timezoneId: 'Asia/Kuala_Lumpur',
+      },
+    },
+    {
+      name: 'webkit-desktop',
+      use: {
+        ...devices['Desktop Safari'],
+        timezoneId: 'Asia/Kuala_Lumpur',
+      },
+    },
+  ],
   webServer: process.env.E2E_BASE_URL?.startsWith('http://localhost:3000')
     ? {
         command: 'npx vite dev --host 127.0.0.1 --port 3000',

@@ -1,0 +1,61 @@
+name: Advisory tests
+
+on:
+  schedule:
+    - cron: '17 18 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser:
+    continue-on-error: true
+    environment: release-preview
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      E2E_BASE_URL: ${{ vars.E2E_BASE_URL }}
+      E2E_HOST_EMAIL: ${{ secrets.E2E_HOST_EMAIL }}
+      E2E_HOST_PASSWORD: ${{ secrets.E2E_HOST_PASSWORD }}
+      E2E_GUEST_EMAIL: ${{ secrets.E2E_GUEST_EMAIL }}
+      E2E_GUEST_PASSWORD: ${{ secrets.E2E_GUEST_PASSWORD }}
+      E2E_PUBLIC_SCHEDULE_URL: ${{ vars.E2E_PUBLIC_SCHEDULE_URL }}
+      E2E_PUBLIC_DECISION_URL: ${{ vars.E2E_PUBLIC_DECISION_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps firefox webkit
+      - run: npm run test:advisory
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: advisory-browser-failures
+          path: test-results
+          retention-days: 7
+  integrations:
+    continue-on-error: true
+    environment: release-preview
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      AGENTMAIL_API_KEY: ${{ secrets.AGENTMAIL_API_KEY }}
+      AGENTMAIL_INBOX_ID: ${{ vars.AGENTMAIL_INBOX_ID }}
+      AGENTMAIL_TEST_RECIPIENT: ${{ vars.AGENTMAIL_TEST_RECIPIENT }}
+      AGENTMAIL_TEST_RECIPIENT_INBOX_ID: ${{ vars.AGENTMAIL_TEST_RECIPIENT_INBOX_ID }}
+      AUTH_GOOGLE_CLIENT_ID: ${{ secrets.AUTH_GOOGLE_CLIENT_ID }}
+      AUTH_GOOGLE_CLIENT_SECRET: ${{ secrets.AUTH_GOOGLE_CLIENT_SECRET }}
+      GOOGLE_CALENDAR_TEST_REFRESH_TOKEN: ${{ secrets.GOOGLE_CALENDAR_TEST_REFRESH_TOKEN }}
+      GOOGLE_CALENDAR_TEST_ID: ${{ vars.GOOGLE_CALENDAR_TEST_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run test:integrations

@@ -1,0 +1,36 @@
+name: Production read-only check
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    environment: production-check
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      E2E_BASE_URL: ${{ vars.E2E_BASE_URL }}
+      E2E_HOST_EMAIL: ${{ secrets.E2E_HOST_EMAIL }}
+      E2E_HOST_PASSWORD: ${{ secrets.E2E_HOST_PASSWORD }}
+      E2E_PUBLIC_SCHEDULE_URL: ${{ vars.E2E_PUBLIC_SCHEDULE_URL }}
+      E2E_PUBLIC_DECISION_URL: ${{ vars.E2E_PUBLIC_DECISION_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:production
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-check-failure
+          path: test-results
+          retention-days: 7

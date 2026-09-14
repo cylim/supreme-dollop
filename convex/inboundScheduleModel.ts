@@ -2,7 +2,10 @@ import { v } from 'convex/values'
 import { parseInboundRequest } from '../shared/inboundScheduleRequest'
 import { internalMutation, internalQuery } from './_generated/server'
 import { internal } from './_generated/api'
-import { createAttachedFromDraft, createStandaloneDecision } from './decisionLifecycle'
+import {
+  createAttachedFromDraft,
+  createStandaloneDecision,
+} from './decisionLifecycle'
 import { createSchedule } from './scheduleLifecycle'
 import type { Id } from './_generated/dataModel'
 import type { MutationCtx } from './_generated/server'
@@ -81,7 +84,11 @@ export const process = internalMutation({
       return null
     }
     if (parsed.kind === 'decision') {
-      const decision = await createStandaloneDecision(ctx, host, parsed.decision)
+      const decision = await createStandaloneDecision(
+        ctx,
+        host,
+        parsed.decision,
+      )
       await ctx.db.patch('inboundScheduleRequests', request._id, {
         status: 'created',
         decisionId: decision.id,
@@ -137,7 +144,9 @@ export const getReplyPayload = internalQuery({
     const attached = schedule
       ? await ctx.db
           .query('decisions')
-          .withIndex('by_schedule', (query) => query.eq('scheduleId', schedule._id))
+          .withIndex('by_schedule', (query) =>
+            query.eq('scheduleId', schedule._id),
+          )
           .take(20)
       : []
     return {

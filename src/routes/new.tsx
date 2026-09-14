@@ -64,7 +64,9 @@ function ScheduleForm() {
             <textarea
               {...stylex.props(styles.textarea)}
               value={fields.description}
-              onChange={(event) => draft.update('description', event.target.value)}
+              onChange={(event) =>
+                draft.update('description', event.target.value)
+              }
               maxLength={1000}
               placeholder="What should people know before voting?"
             />
@@ -92,7 +94,9 @@ function ScheduleForm() {
                 type="datetime-local"
                 {...stylex.props(styles.input)}
                 value={fields.deadline}
-                onChange={(event) => draft.update('deadline', event.target.value)}
+                onChange={(event) =>
+                  draft.update('deadline', event.target.value)
+                }
                 required
               />
             </label>
@@ -156,7 +160,9 @@ function ScheduleForm() {
                 type="datetime-local"
                 {...stylex.props(styles.input)}
                 value={fields.exactStart}
-                onChange={(event) => draft.update('exactStart', event.target.value)}
+                onChange={(event) =>
+                  draft.update('exactStart', event.target.value)
+                }
               />
               <button
                 type="button"
@@ -181,13 +187,17 @@ function ScheduleForm() {
                 type="datetime-local"
                 {...stylex.props(styles.input)}
                 value={fields.rangeStart}
-                onChange={(event) => draft.update('rangeStart', event.target.value)}
+                onChange={(event) =>
+                  draft.update('rangeStart', event.target.value)
+                }
               />
               <input
                 type="datetime-local"
                 {...stylex.props(styles.input)}
                 value={fields.rangeEnd}
-                onChange={(event) => draft.update('rangeEnd', event.target.value)}
+                onChange={(event) =>
+                  draft.update('rangeEnd', event.target.value)
+                }
               />
               <label {...stylex.props(styles.compactLabel)}>
                 Start every
@@ -224,7 +234,10 @@ function ScheduleForm() {
               </button>
             </div>
             {draft.candidates.map((candidate) => (
-              <div key={candidateKey(candidate)} {...stylex.props(styles.candidate)}>
+              <div
+                key={candidateKey(candidate)}
+                {...stylex.props(styles.candidate)}
+              >
                 <div>
                   <strong>{formatDate(candidate.startAt)}</strong>
                   <span>
@@ -277,7 +290,9 @@ function ScheduleForm() {
               <textarea
                 {...stylex.props(styles.textarea)}
                 value={fields.inviteEmails}
-                onChange={(event) => draft.update('inviteEmails', event.target.value)}
+                onChange={(event) =>
+                  draft.update('inviteEmails', event.target.value)
+                }
                 placeholder={'alex@example.com\njamie@example.com'}
               />
             </label>

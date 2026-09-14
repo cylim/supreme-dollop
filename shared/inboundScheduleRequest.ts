@@ -1,16 +1,17 @@
 import {
   MAX_ATTACHED_DECISIONS,
-  
-  
   normalizeAttachedDecisionDraft,
   normalizeSelectMode,
-  normalizeStandaloneDecisionDraft
+  normalizeStandaloneDecisionDraft,
 } from './decisionDraft'
 import {
   generateRangeCandidates,
   normalizeScheduleDraft,
 } from './scheduleDraft'
-import type {NormalizedAttachedDecisionDraft, NormalizedStandaloneDecisionDraft} from './decisionDraft';
+import type {
+  NormalizedAttachedDecisionDraft,
+  NormalizedStandaloneDecisionDraft,
+} from './decisionDraft'
 import type {
   CandidateTime,
   NormalizedScheduleDraft,
@@ -50,7 +51,8 @@ export function parseInboundRequest(
   if (kind !== 'schedule' && kind !== 'decision') {
     throw new Error('kind must be schedule or decision.')
   }
-  if (kind === 'decision') return { kind, decision: parseStandaloneDecision(value, now) }
+  if (kind === 'decision')
+    return { kind, decision: parseStandaloneDecision(value, now) }
   return {
     kind,
     schedule: parseSchedule(value, now),
@@ -115,7 +117,12 @@ function parseStandaloneDecision(
       options: requiredStringArray(value, 'options'),
       inviteEmails: optionalStringArray(value, 'inviteEmails'),
       ...(value.closesAt !== undefined
-        ? { closesAt: parseTimestamp(requiredString(value, 'closesAt'), 'closesAt') }
+        ? {
+            closesAt: parseTimestamp(
+              requiredString(value, 'closesAt'),
+              'closesAt',
+            ),
+          }
         : {}),
     },
     now,

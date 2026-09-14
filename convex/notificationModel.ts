@@ -61,10 +61,7 @@ export const getDecisionPayload = internalQuery({
     v.object({
       slug: v.string(),
       title: v.string(),
-      timezone: v.string(),
       recipients: v.array(v.string()),
-      selectedStartAt: v.union(v.number(), v.null()),
-      selectedEndAt: v.union(v.number(), v.null()),
     }),
     v.null(),
   ),
@@ -80,10 +77,7 @@ export const getDecisionPayload = internalQuery({
     return {
       slug: decision.slug,
       title: decision.title,
-      timezone: '',
       recipients: invitations.map((item) => item.email),
-      selectedStartAt: null,
-      selectedEndAt: null,
     }
   },
 })

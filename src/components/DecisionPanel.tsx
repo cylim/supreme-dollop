@@ -6,7 +6,9 @@ import { Face } from './Face'
 import type { FunctionReturnType } from 'convex/server'
 import type { Id } from '../../convex/_generated/dataModel'
 
-type DecisionView = NonNullable<FunctionReturnType<typeof api.decisions.getBySlug>>
+type DecisionView = NonNullable<
+  FunctionReturnType<typeof api.decisions.getBySlug>
+>
 
 export function DecisionPanel({ decision }: { decision: DecisionView }) {
   const submitBallot = useMutation(api.decisions.submitBallot)
@@ -27,14 +29,18 @@ export function DecisionPanel({ decision }: { decision: DecisionView }) {
     try {
       await submitBallot({ decisionId: decision.id, optionIds })
     } catch (caught) {
-      setMessage(caught instanceof Error ? caught.message : 'Could not save your ballot.')
+      setMessage(
+        caught instanceof Error
+          ? caught.message
+          : 'Could not save your ballot.',
+      )
     } finally {
       setSaving(false)
     }
   }
 
   const toggle = (optionId: Id<'decisionOptions'>) => {
-    if (!decision.canVote || saving) return
+    if (!decision.canSubmitBallot || saving) return
     if (decision.selectMode === 'single') {
       void save(selected[0] === optionId ? [] : [optionId])
       return
@@ -53,7 +59,9 @@ export function DecisionPanel({ decision }: { decision: DecisionView }) {
       await addOption({ decisionId: decision.id, label: newLabel })
       setNewLabel('')
     } catch (caught) {
-      setMessage(caught instanceof Error ? caught.message : 'Could not add that option.')
+      setMessage(
+        caught instanceof Error ? caught.message : 'Could not add that option.',
+      )
     } finally {
       setSaving(false)
     }
@@ -65,7 +73,11 @@ export function DecisionPanel({ decision }: { decision: DecisionView }) {
     try {
       await removeOption({ decisionId: decision.id, optionId })
     } catch (caught) {
-      setMessage(caught instanceof Error ? caught.message : 'Could not remove that option.')
+      setMessage(
+        caught instanceof Error
+          ? caught.message
+          : 'Could not remove that option.',
+      )
     } finally {
       setSaving(false)
     }
@@ -77,7 +89,11 @@ export function DecisionPanel({ decision }: { decision: DecisionView }) {
     try {
       await closeDecision({ decisionId: decision.id })
     } catch (caught) {
-      setMessage(caught instanceof Error ? caught.message : 'Could not close this decision.')
+      setMessage(
+        caught instanceof Error
+          ? caught.message
+          : 'Could not close this decision.',
+      )
     } finally {
       setSaving(false)
     }
@@ -88,7 +104,9 @@ export function DecisionPanel({ decision }: { decision: DecisionView }) {
       <div {...stylex.props(styles.heading)}>
         <div>
           <span {...stylex.props(styles.eyebrow)}>
-            {decision.selectMode === 'single' ? 'Pick one' : 'Pick any that apply'}
+            {decision.selectMode === 'single'
+              ? 'Pick one'
+              : 'Pick any that apply'}
           </span>
           <h2 {...stylex.props(styles.title)}>{decision.title}</h2>
           {decision.description && (
@@ -101,7 +119,10 @@ export function DecisionPanel({ decision }: { decision: DecisionView }) {
         {decision.options.map((option, index) => (
           <article
             key={option.id}
-            {...stylex.props(styles.option, option.selected && styles.optionSelected)}
+            {...stylex.props(
+              styles.option,
+              option.selected && styles.optionSelected,
+            )}
           >
             <div {...stylex.props(styles.rank)}>{index + 1}</div>
             <div {...stylex.props(styles.copy)}>
@@ -119,12 +140,15 @@ export function DecisionPanel({ decision }: { decision: DecisionView }) {
                 </span>
               </div>
             </div>
-            {decision.canVote && (
+            {decision.canSubmitBallot && (
               <button
                 type="button"
                 aria-pressed={option.selected}
                 disabled={saving}
-                {...stylex.props(styles.voteButton, option.selected && styles.voteYes)}
+                {...stylex.props(
+                  styles.selectionButton,
+                  option.selected && styles.selectionActive,
+                )}
                 onClick={() => toggle(option.id)}
               >
                 {option.selected ? 'Selected' : 'Select'}
@@ -244,10 +268,16 @@ const styles = stylex.create({
     fontSize: 12,
     fontWeight: 800,
   },
-  copy: { display: 'flex', flexDirection: 'column', gap: 8, color: '#26342c', fontSize: 13 },
+  copy: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 8,
+    color: '#26342c',
+    fontSize: 13,
+  },
   faces: { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 },
   count: { color: '#6a776f', fontSize: 10, fontWeight: 700 },
-  voteButton: {
+  selectionButton: {
     minWidth: 92,
     paddingInline: 12,
     paddingBlock: 9,
@@ -261,7 +291,11 @@ const styles = stylex.create({
     fontSize: 11,
     fontWeight: 750,
   },
-  voteYes: { borderColor: '#267049', color: '#fff', backgroundColor: '#267049' },
+  selectionActive: {
+    borderColor: '#267049',
+    color: '#fff',
+    backgroundColor: '#267049',
+  },
   removeButton: {
     width: 30,
     height: 30,

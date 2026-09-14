@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import * as stylex from '@stylexjs/stylex'
 import { useQuery } from 'convex/react'
@@ -21,14 +20,17 @@ function DecisionPage() {
 
 function Decision() {
   const { slug } = Route.useParams()
-  const [now] = useState(() => Date.now())
-  const decision = useQuery(api.decisions.getBySlug, { slug, now })
+  const decision = useQuery(api.decisions.getBySlug, { slug })
 
   if (decision === undefined) {
     return <main {...stylex.props(styles.center)}>Loading the decision…</main>
   }
   if (decision === null) {
-    return <main {...stylex.props(styles.center)}>This decision does not exist.</main>
+    return (
+      <main {...stylex.props(styles.center)}>
+        This decision does not exist.
+      </main>
+    )
   }
 
   return (
@@ -48,7 +50,9 @@ function Decision() {
             <p {...stylex.props(styles.description)}>{decision.description}</p>
           )}
           <p {...stylex.props(styles.meta)}>
-            {decision.selectMode === 'single' ? 'Single select' : 'Multi select'}
+            {decision.selectMode === 'single'
+              ? 'Single select'
+              : 'Multi select'}
             {decision.closesAt
               ? ` · closes ${new Intl.DateTimeFormat(undefined, {
                   month: 'short',
@@ -62,7 +66,9 @@ function Decision() {
         <button
           type="button"
           {...stylex.props(styles.copyButton)}
-          onClick={() => void navigator.clipboard.writeText(window.location.href)}
+          onClick={() =>
+            void navigator.clipboard.writeText(window.location.href)
+          }
         >
           Copy link
         </button>
@@ -73,7 +79,12 @@ function Decision() {
 }
 
 const styles = stylex.create({
-  center: { minHeight: '60vh', display: 'grid', placeItems: 'center', color: '#627067' },
+  center: {
+    minHeight: '60vh',
+    display: 'grid',
+    placeItems: 'center',
+    color: '#627067',
+  },
   main: {
     width: '100%',
     maxWidth: 880,

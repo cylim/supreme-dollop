@@ -1,4 +1,4 @@
-import {  useState } from 'react'
+import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import * as stylex from '@stylexjs/stylex'
 import { useMutation } from 'convex/react'
@@ -6,9 +6,9 @@ import { api } from '../../convex/_generated/api'
 import { AppShell } from '../components/AppShell'
 import { AuthGate } from '../components/AuthGate'
 import { parseInviteEmails } from '../../shared/scheduleDraft'
-import type {FormEvent} from 'react';
+import type { FormEvent } from 'react'
 
-export const Route = createFileRoute('/new/decision')({
+export const Route = createFileRoute('/new_/decision')({
   component: NewDecisionPage,
 })
 
@@ -30,6 +30,7 @@ function DecisionForm() {
   const [selectMode, setSelectMode] = useState<'single' | 'multi'>('single')
   const [visibility, setVisibility] = useState<'public' | 'invited'>('public')
   const [inviteEmails, setInviteEmails] = useState('')
+  const [closesAt, setClosesAt] = useState('')
   const [options, setOptions] = useState(['', ''])
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -47,10 +48,15 @@ function DecisionForm() {
         options: options.map((option) => option.trim()).filter(Boolean),
         inviteEmails:
           visibility === 'invited' ? parseInviteEmails(inviteEmails) : [],
+        ...(closesAt ? { closesAt: new Date(closesAt).getTime() } : {}),
       })
       await navigate({ to: '/d/$slug', params: { slug: created.slug } })
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Could not create the decision.')
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : 'Could not create the decision.',
+      )
     } finally {
       setSaving(false)
     }
@@ -65,7 +71,10 @@ function DecisionForm() {
           Collect signed-in opinion on labeled options. Time stays on schedules.
         </p>
       </div>
-      <form {...stylex.props(styles.form)} onSubmit={(event) => void submit(event)}>
+      <form
+        {...stylex.props(styles.form)}
+        onSubmit={(event) => void submit(event)}
+      >
         <section {...stylex.props(styles.card)}>
           <span {...stylex.props(styles.step)}>01 · The question</span>
           <label {...stylex.props(styles.label)}>
@@ -80,7 +89,8 @@ function DecisionForm() {
             />
           </label>
           <label {...stylex.props(styles.label)}>
-            A little context <span {...stylex.props(styles.optional)}>optional</span>
+            A little context{' '}
+            <span {...stylex.props(styles.optional)}>optional</span>
             <textarea
               {...stylex.props(styles.textarea)}
               value={description}
@@ -94,7 +104,10 @@ function DecisionForm() {
           <div {...stylex.props(styles.choiceRow)}>
             <button
               type="button"
-              {...stylex.props(styles.choice, selectMode === 'single' && styles.choiceActive)}
+              {...stylex.props(
+                styles.choice,
+                selectMode === 'single' && styles.choiceActive,
+              )}
               onClick={() => setSelectMode('single')}
             >
               <strong>Single select</strong>
@@ -102,7 +115,10 @@ function DecisionForm() {
             </button>
             <button
               type="button"
-              {...stylex.props(styles.choice, selectMode === 'multi' && styles.choiceActive)}
+              {...stylex.props(
+                styles.choice,
+                selectMode === 'multi' && styles.choiceActive,
+              )}
               onClick={() => setSelectMode('multi')}
             >
               <strong>Multi select</strong>
@@ -139,7 +155,10 @@ function DecisionForm() {
           <div {...stylex.props(styles.choiceRow)}>
             <button
               type="button"
-              {...stylex.props(styles.choice, visibility === 'public' && styles.choiceActive)}
+              {...stylex.props(
+                styles.choice,
+                visibility === 'public' && styles.choiceActive,
+              )}
               onClick={() => setVisibility('public')}
             >
               <strong>Public link</strong>
@@ -147,16 +166,19 @@ function DecisionForm() {
             </button>
             <button
               type="button"
-              {...stylex.props(styles.choice, visibility === 'invited' && styles.choiceActive)}
+              {...stylex.props(
+                styles.choice,
+                visibility === 'invited' && styles.choiceActive,
+              )}
               onClick={() => setVisibility('invited')}
             >
-              <strong>Invite only</strong>
+              <strong>Invited decision</strong>
               <span>Restricted to listed Google emails</span>
             </button>
           </div>
           {visibility === 'invited' && (
             <label {...stylex.props(styles.label)}>
-              Guest emails
+              Invitation emails
               <textarea
                 {...stylex.props(styles.textarea)}
                 value={inviteEmails}
@@ -165,13 +187,26 @@ function DecisionForm() {
               />
             </label>
           )}
+          <label {...stylex.props(styles.label)}>
+            Close date <span {...stylex.props(styles.optional)}>optional</span>
+            <input
+              type="datetime-local"
+              {...stylex.props(styles.input)}
+              value={closesAt}
+              onChange={(event) => setClosesAt(event.target.value)}
+            />
+          </label>
         </section>
         {error && (
           <p role="alert" {...stylex.props(styles.error)}>
             {error}
           </p>
         )}
-        <button type="submit" disabled={saving} {...stylex.props(styles.submitButton)}>
+        <button
+          type="submit"
+          disabled={saving}
+          {...stylex.props(styles.submitButton)}
+        >
           {saving ? 'Creating…' : 'Open the decision'}
         </button>
       </form>

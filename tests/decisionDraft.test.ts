@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import {
   normalizeAttachedDecisionDraft,
+  normalizeClosesAt,
+  normalizeDecisionDescription,
+  normalizeDecisionTitle,
+  normalizeOptionLabel,
+  normalizeOptionLabels,
+  normalizeSelectMode,
   normalizeStandaloneDecisionDraft,
 } from '../shared/decisionDraft'
 
@@ -74,5 +80,73 @@ describe('decision draft rules', () => {
     )
     expect(draft.options).toEqual(['Thai', 'Pizza'])
     expect(draft.closesAt).toBe(now + 120_000)
+  })
+
+  it('validates labels, option counts, titles, modes, and deadlines', () => {
+    for (const label of ['', 'x'.repeat(81)]) {
+      expect(() => normalizeOptionLabel(label)).toThrow(/label/i)
+    }
+    for (const options of [
+      ['only'],
+      Array.from({ length: 101 }, (_, i) => `${i}`),
+    ]) {
+      expect(() => normalizeOptionLabels(options)).toThrow(/2 and 100/i)
+    }
+    expect(() => normalizeDecisionTitle('x'.repeat(121))).toThrow(/3 and 120/i)
+    expect(() => normalizeSelectMode('ranked')).toThrow(/single or multi/i)
+    expect(normalizeSelectMode('multi')).toBe('multi')
+    expect(normalizeClosesAt(undefined, now)).toBeUndefined()
+    for (const closesAt of [Number.NaN, -1]) {
+      expect(() => normalizeClosesAt(closesAt, now)).toThrow(/invalid/i)
+    }
+    expect(() => normalizeClosesAt(now + 60_000, now)).toThrow(/one minute/i)
+    expect(normalizeClosesAt(now + 60_001, now)).toBe(now + 60_001)
+  })
+
+  it('normalizes optional descriptions and invitation limits', () => {
+    expect(normalizeDecisionDescription(undefined)).toBeUndefined()
+    expect(normalizeDecisionDescription('   ')).toBeUndefined()
+    expect(
+      normalizeDecisionDescription(`  ${'x'.repeat(1_001)}  `),
+    ).toHaveLength(1_000)
+    const publicDraft = normalizeStandaloneDecisionDraft(
+      {
+        title: 'Public question',
+        description: '   ',
+        visibility: 'public',
+        selectMode: 'multi',
+        options: ['One', 'Two'],
+        inviteEmails: [],
+      },
+      now,
+    )
+    expect(publicDraft).not.toHaveProperty('description')
+    expect(publicDraft).not.toHaveProperty('closesAt')
+    expect(() =>
+      normalizeStandaloneDecisionDraft(
+        {
+          title: 'Too many invitations',
+          visibility: 'invited',
+          selectMode: 'single',
+          options: ['One', 'Two'],
+          inviteEmails: Array.from(
+            { length: 101 },
+            (_, index) => `${index}@example.com`,
+          ),
+        },
+        now,
+      ),
+    ).toThrow(/at most 100/i)
+    expect(
+      normalizeAttachedDecisionDraft(
+        {
+          title: 'Attached question',
+          description: ' context ',
+          selectMode: 'single',
+          options: ['One', 'Two'],
+        },
+        now,
+      ),
+    ).toMatchObject({ description: 'context' })
   })
 })

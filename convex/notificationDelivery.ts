@@ -1,12 +1,13 @@
-export type NotificationKind = 'invitation' | 'finalized' | 'decision_invitation'
+export type NotificationKind =
+  'invitation' | 'finalized' | 'decision_invitation'
 
 export type NotificationPayload = {
   slug: string
   title: string
-  timezone: string
   recipients: Array<string>
-  selectedStartAt: number | null
-  selectedEndAt: number | null
+  timezone?: string
+  selectedStartAt?: number | null
+  selectedEndAt?: number | null
 }
 
 export type NotificationOutcome = {
@@ -39,14 +40,17 @@ export async function deliverInboundReply(
   if (deliverable.length === 0) return 'skipped'
   if (!adapter.reply) return 'failed'
   try {
-    await adapter.reply({ text: input.text, idempotencyKey: input.idempotencyKey })
+    await adapter.reply({
+      text: input.text,
+      idempotencyKey: input.idempotencyKey,
+    })
     return 'sent'
   } catch {
     return 'failed'
   }
 }
 
-export async function deliverScheduleNotification(
+export async function deliverNotification(
   input: {
     kind: NotificationKind
     payload: NotificationPayload | null
@@ -138,9 +142,9 @@ function buildMessage(
   idempotencyKey: string,
 ): OutboundMessage {
   const chosenTime =
-    payload.selectedStartAt === null || payload.selectedEndAt === null
+    payload.selectedStartAt == null || payload.selectedEndAt == null
       ? ''
-      : `\n\nChosen time: ${new Date(payload.selectedStartAt).toISOString()} to ${new Date(payload.selectedEndAt).toISOString()} (${payload.timezone})`
+      : `\n\nChosen time: ${new Date(payload.selectedStartAt).toISOString()} to ${new Date(payload.selectedEndAt).toISOString()} (${payload.timezone ?? 'UTC'})`
   if (kind === 'decision_invitation') {
     return {
       recipient,

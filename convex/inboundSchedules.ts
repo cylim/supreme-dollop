@@ -29,7 +29,10 @@ export const reply = internalAction({
       {
         ...(client
           ? {
-              reply: async (message: { text: string; idempotencyKey: string }) => {
+              reply: async (message: {
+                text: string
+                idempotencyKey: string
+              }) => {
                 await client.inboxes.messages.reply(
                   payload.inboxId,
                   payload.messageId,

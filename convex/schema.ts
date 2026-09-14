@@ -8,6 +8,47 @@ const scheduleStatus = v.union(
   v.literal('cancelled'),
 )
 
+const decisionFields = v.object({
+  hostId: v.id('users'),
+  slug: v.string(),
+  title: v.string(),
+  description: v.optional(v.string()),
+  selectMode: v.union(v.literal('single'), v.literal('multi')),
+  closesAt: v.optional(v.number()),
+  status: v.union(v.literal('open'), v.literal('closed')),
+  closedAt: v.optional(v.number()),
+  participantCount: v.optional(v.number()),
+})
+
+const decision = v.union(
+  decisionFields.extend({
+    visibility: v.union(v.literal('public'), v.literal('invited')),
+  }),
+  decisionFields.extend({ scheduleId: v.id('schedules') }),
+)
+
+const notificationRunFields = v.object({
+  status: v.union(
+    v.literal('pending'),
+    v.literal('sent'),
+    v.literal('failed'),
+    v.literal('skipped'),
+  ),
+  attemptedAt: v.optional(v.number()),
+  errorCode: v.optional(v.string()),
+})
+
+const notificationRun = v.union(
+  notificationRunFields.extend({
+    scheduleId: v.id('schedules'),
+    kind: v.union(v.literal('invitation'), v.literal('finalized')),
+  }),
+  notificationRunFields.extend({
+    decisionId: v.id('decisions'),
+    kind: v.literal('decision_invitation'),
+  }),
+)
+
 export default defineSchema({
   users: defineTable({
     providerAccountId: v.string(),
@@ -86,20 +127,9 @@ export default defineSchema({
     connectedAt: v.number(),
   }).index('by_user', ['userId']),
 
-  decisions: defineTable({
-    hostId: v.id('users'),
-    slug: v.string(),
-    title: v.string(),
-    description: v.optional(v.string()),
-    scheduleId: v.optional(v.id('schedules')),
-    visibility: v.optional(v.union(v.literal('public'), v.literal('invited'))),
-    selectMode: v.union(v.literal('single'), v.literal('multi')),
-    closesAt: v.optional(v.number()),
-    status: v.union(v.literal('open'), v.literal('closed')),
-    closedAt: v.optional(v.number()),
-  })
+  decisions: defineTable(decision)
     .index('by_slug', ['slug'])
-    .index('by_host', ['hostId'])
+    .index('by_host_and_schedule_id', ['hostId', 'scheduleId'])
     .index('by_schedule', ['scheduleId'])
     .index('by_status_and_closes_at', ['status', 'closesAt']),
 
@@ -115,7 +145,7 @@ export default defineSchema({
     email: v.string(),
   }).index('by_decision_and_email', ['decisionId', 'email']),
 
-  decisionVotes: defineTable({
+  decisionSelections: defineTable({
     decisionId: v.id('decisions'),
     optionId: v.id('decisionOptions'),
     userId: v.id('users'),
@@ -128,28 +158,12 @@ export default defineSchema({
   decisionParticipants: defineTable({
     decisionId: v.id('decisions'),
     userId: v.id('users'),
-    votedAt: v.number(),
+    submittedAt: v.number(),
   })
     .index('by_decision_and_user', ['decisionId', 'userId'])
     .index('by_decision', ['decisionId']),
 
-  notificationRuns: defineTable({
-    scheduleId: v.optional(v.id('schedules')),
-    decisionId: v.optional(v.id('decisions')),
-    kind: v.union(
-      v.literal('invitation'),
-      v.literal('finalized'),
-      v.literal('decision_invitation'),
-    ),
-    status: v.union(
-      v.literal('pending'),
-      v.literal('sent'),
-      v.literal('failed'),
-      v.literal('skipped'),
-    ),
-    attemptedAt: v.optional(v.number()),
-    errorCode: v.optional(v.string()),
-  })
+  notificationRuns: defineTable(notificationRun)
     .index('by_schedule_and_kind', ['scheduleId', 'kind'])
     .index('by_decision_and_kind', ['decisionId', 'kind']),
 
