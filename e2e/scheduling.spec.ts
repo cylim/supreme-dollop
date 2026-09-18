@@ -96,7 +96,7 @@ test.describe('multi-user scheduling', () => {
         .click()
       await expect(host.page.getByText(/decided/)).toBeVisible()
     } finally {
-      await Promise.all(sessions.map(({ context }) => context.close()))
+      await Promise.all(sessions.map((session) => session.close()))
     }
   })
 
@@ -145,7 +145,7 @@ test.describe('multi-user scheduling', () => {
         })
       }
     } finally {
-      await Promise.all(sessions.map(({ context }) => context.close()))
+      await Promise.all(sessions.map((session) => session.close()))
     }
   })
 })

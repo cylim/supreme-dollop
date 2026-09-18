@@ -493,7 +493,7 @@ const styles = stylex.create({
     lineHeight: 1.05,
   },
   description: { maxWidth: 680, color: '#536159', lineHeight: 1.6 },
-  meta: { color: '#748078', fontSize: 12 },
+  meta: { color: '#536159', fontSize: 12 },
   copyButton: {
     paddingInline: 14,
     paddingBlock: 9,
@@ -606,7 +606,7 @@ const styles = stylex.create({
     display: 'flex',
     flexWrap: 'wrap',
     gap: 7,
-    color: '#6a776f',
+    color: '#536159',
     fontSize: 10,
   },
   recommended: { color: '#1e633c', fontWeight: 800 },
@@ -676,7 +676,7 @@ const styles = stylex.create({
     backgroundColor: '#fffdf8',
   },
   bigNumber: { marginTop: 8, color: '#1b5f38', fontSize: 44, lineHeight: 1 },
-  smallText: { marginTop: 5, color: '#708078', fontSize: 11 },
+  smallText: { marginTop: 5, color: '#536159', fontSize: 11 },
   inviteList: {
     marginTop: 12,
     display: 'flex',

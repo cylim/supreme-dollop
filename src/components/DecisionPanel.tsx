@@ -11,7 +11,21 @@ type DecisionView = NonNullable<
 >
 
 export function DecisionPanel({ decision }: { decision: DecisionView }) {
-  const submitBallot = useMutation(api.decisions.submitBallot)
+  const submitBallot = useMutation(
+    api.decisions.submitBallot,
+  ).withOptimisticUpdate((localStore, args) => {
+    const queryArgs = { slug: decision.slug }
+    const current = localStore.getQuery(api.decisions.getBySlug, queryArgs)
+    if (current === undefined || current === null) return
+    const selectedIds = new Set(args.optionIds)
+    localStore.setQuery(api.decisions.getBySlug, queryArgs, {
+      ...current,
+      options: current.options.map((option) => ({
+        ...option,
+        selected: selectedIds.has(option.id),
+      })),
+    })
+  })
   const addOption = useMutation(api.decisions.addOption)
   const removeOption = useMutation(api.decisions.removeOption)
   const closeDecision = useMutation(api.decisions.close)

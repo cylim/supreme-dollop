@@ -32,7 +32,7 @@ test.describe('multi-user decisions', () => {
 
       await participant.page.goto(decisionUrl)
       await participant.page
-        .getByRole('button', { name: 'Select' })
+        .getByRole('button', { name: 'Select', exact: true })
         .first()
         .click()
       await expect(
@@ -50,7 +50,7 @@ test.describe('multi-user decisions', () => {
           .getByText('E', { exact: true }),
       ).toBeVisible()
     } finally {
-      await Promise.all(sessions.map(({ context }) => context.close()))
+      await Promise.all(sessions.map((session) => session.close()))
     }
   })
 
@@ -79,11 +79,11 @@ test.describe('multi-user decisions', () => {
 
       await participant.page.goto(host.page.url())
       await participant.page
-        .getByRole('button', { name: 'Select' })
+        .getByRole('button', { name: 'Select', exact: true })
         .first()
         .click()
       await participant.page
-        .getByRole('button', { name: 'Select' })
+        .getByRole('button', { name: 'Select', exact: true })
         .first()
         .click()
       await expect(
@@ -94,12 +94,14 @@ test.describe('multi-user decisions', () => {
       await host.page.getByRole('button', { name: 'Add', exact: true }).click()
       await expect(host.page.getByText('Sushi')).toBeVisible()
       await host.page.getByRole('button', { name: 'Close decision' }).click()
-      await expect(host.page.getByText('closed', { exact: true })).toBeVisible()
       await expect(
-        participant.page.getByRole('button', { name: 'Select' }),
+        host.page.locator('main > header').getByText('closed', { exact: true }),
+      ).toBeVisible()
+      await expect(
+        participant.page.getByRole('button', { name: 'Select', exact: true }),
       ).toHaveCount(0)
     } finally {
-      await Promise.all(sessions.map(({ context }) => context.close()))
+      await Promise.all(sessions.map((session) => session.close()))
     }
   })
 })

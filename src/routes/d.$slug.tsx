@@ -124,7 +124,7 @@ const styles = stylex.create({
     lineHeight: 1.05,
   },
   description: { maxWidth: 680, color: '#536159', lineHeight: 1.6 },
-  meta: { color: '#748078', fontSize: 12 },
+  meta: { color: '#536159', fontSize: 12 },
   copyButton: {
     paddingInline: 14,
     paddingBlock: 9,

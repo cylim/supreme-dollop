@@ -12,7 +12,7 @@
 - **Auth:** Convex Auth
 - **AI models:** none
 - **Started:** 2026-09-05T11:58:05Z
-- **Last updated:** 2026-09-14T02:31:38Z
+- **Last updated:** 2026-09-18T11:35:20Z
 
 ## Log
 
@@ -84,10 +84,18 @@ local suite passes 87 tests with 96.97% line coverage
 (`convex/decisions.ts`, `convex/decisionAccess.ts`,
 `convex/decisionReadModel.ts`).
 
-### 2026-09-14 - working tree
+### 2026-09-18 - a5b0faf
 
-Pinned local development to Node 26. Bun 1.3.14 ran the type and lint steps but
-could not run Vitest's V8 coverage provider, so Node 26 remains the supported
-runtime. The migration rehearsal passes, and the browser suite now uses one
-worker to avoid concurrent sign-ins with shared test accounts (`.nvmrc`,
-`package.json`, `playwright.config.ts`).
+Kept verification local by removing the GitHub merge, release, advisory, and
+production gates and their helper scripts. Pinned development to Node 26 and
+limited Playwright to one worker to avoid concurrent sign-ins with shared test
+accounts (`README.md`, `.nvmrc`, `package.json`, `playwright.config.ts`).
+
+### 2026-09-18 - working tree
+
+Fixed rapid multi-select voting with an optimistic Convex update so consecutive
+choices preserve the whole ballot. Reused cached browser auth with rate-limit
+retries, enabled full E2E recording, tightened selectors, and corrected
+low-contrast text. All 10 desktop and mobile E2E scenarios pass with no skips;
+87 unit and backend tests, typecheck, lint, and production build also pass
+(`src/components/DecisionPanel.tsx`, `e2e`, `src/routes`).

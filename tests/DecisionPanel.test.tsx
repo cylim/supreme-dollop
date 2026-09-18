@@ -8,7 +8,9 @@ import type { ComponentProps } from 'react'
 
 const mocks = vi.hoisted(() => ({
   useMutation: vi.fn(),
-  submitBallot: vi.fn(),
+  submitBallot: Object.assign(vi.fn(), {
+    withOptimisticUpdate: vi.fn(),
+  }),
   addOption: vi.fn(),
   removeOption: vi.fn(),
   closeDecision: vi.fn(),
@@ -61,6 +63,7 @@ function decision(overrides: Partial<Decision> = {}): Decision {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  mocks.submitBallot.withOptimisticUpdate.mockReturnValue(mocks.submitBallot)
   mocks.useMutation.mockImplementation((reference) => {
     const name = getFunctionName(reference)
     if (name === 'decisions:submitBallot') return mocks.submitBallot
