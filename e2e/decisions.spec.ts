@@ -39,7 +39,7 @@ test.describe('multi-user decisions', () => {
         participant.page
           .locator('article')
           .filter({ hasText: 'Beach' })
-          .getByText('E'),
+          .getByText('E', { exact: true }),
       ).toBeVisible()
 
       await host.page.reload()
@@ -47,7 +47,7 @@ test.describe('multi-user decisions', () => {
         host.page
           .locator('article')
           .filter({ hasText: 'Beach' })
-          .getByText('E'),
+          .getByText('E', { exact: true }),
       ).toBeVisible()
     } finally {
       await Promise.all(sessions.map(({ context }) => context.close()))

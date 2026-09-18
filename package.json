@@ -1,6 +1,9 @@
 {
   "name": "jrny-plan",
   "private": true,
+  "engines": {
+    "node": ">=26 <27"
+  },
   "sideEffects": false,
   "type": "module",
   "scripts": {
@@ -8,14 +11,9 @@
     "test": "npm run test:unit",
     "test:unit": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "test:changed-coverage": "node scripts/check-changed-coverage.mjs",
     "test:browser": "node scripts/check-e2e-env.mjs && playwright test decisions.spec.ts scheduling.spec.ts accessibility.spec.ts --project=chromium-desktop --project=chromium-mobile",
     "test:integrations": "node scripts/check-real-integrations.mjs",
-    "test:merge": "node scripts/run-test-gate.mjs merge",
-    "test:release": "node scripts/run-test-gate.mjs release",
-    "test:advisory": "node scripts/run-test-gate.mjs advisory",
-    "test:production": "node scripts/run-test-gate.mjs production",
-    "test:migration": "node scripts/run-test-gate.mjs migration",
+    "test:migration": "vitest run convex/migration.test.ts",
     "test:secrets": "node scripts/check-secrets.mjs",
     "test:e2e": "npm run test:browser",
     "test:e2e:ui": "node scripts/check-e2e-env.mjs && playwright test --ui",

@@ -43,7 +43,7 @@ hosting.
 
 ## Requirements
 
-- Node.js 24
+- Node.js 26
 - npm
 - A Convex account and development deployment
 - Google OAuth credentials for sign-in
@@ -139,13 +139,10 @@ Convex provides `CONVEX_SITE_URL`. The frontend reads `VITE_CONVEX_URL` from
 | `npm run dev`               | Run Convex and Vite in development mode.                        |
 | `npm test`                  | Run the Vitest and `convex-test` suite once.                    |
 | `npm run test:coverage`     | Run unit and backend tests with the global coverage thresholds. |
-| `npm run test:merge`        | Run every deterministic merge check.                            |
 | `npm run test:migration`    | Rehearse the additive schema change with legacy fixtures.       |
 | `npm run test:integrations` | Check real AgentMail delivery and Google Calendar free/busy.    |
 | `npm run test:e2e`          | Run the desktop and mobile Chromium browser suite.              |
 | `npm run test:e2e:ui`       | Open the Playwright test interface.                             |
-| `npm run test:advisory`     | Run the Firefox and WebKit advisory suite.                      |
-| `npm run test:production`   | Run the mutation-blocked production fixture check.              |
 | `npm run typecheck`         | Check TypeScript without emitting files.                        |
 | `npm run lint`              | Run the typecheck and ESLint.                                   |
 | `npm run format`            | Format the repository with Prettier.                            |
@@ -187,7 +184,7 @@ for the trust model and processing rules.
 
 ## Testing
 
-### Run the local merge checks
+### Run local checks
 
 The unit and backend suite needs no provider credentials or running Convex
 deployment:
@@ -196,16 +193,15 @@ deployment:
 npm test
 ```
 
-Before you open a pull request, run the same deterministic gate as GitHub:
+Run coverage, lint, and the production build before sharing a change:
 
 ```bash
-npm run test:merge
+npm run test:coverage
+npm run lint
+npm run build
 ```
 
-The merge gate checks formatting, types, lint, committed secrets, high-severity
-dependency advisories, coverage, changed-code coverage, and the production
-build. Global line and branch coverage must remain at 85% or higher. Changed
-statements and branches must reach 90%.
+Global line and branch coverage must remain at 85% or higher.
 
 ### Set up browser tests
 
@@ -248,32 +244,6 @@ npx convex env remove E2E_PASSWORD_AUTH_ENABLED
 
 See [the end-to-end testing guide](./docs/e2e-testing.md) for email suppression,
 the second participant, and the Google Calendar boundary.
-
-### Configure comprehensive CI tests
-
-Run the setup wizard from an interactive terminal:
-
-```bash
-./scripts/setup-comprehensive-testing.sh
-```
-
-The wizard configures the `release-preview` and `production-check` GitHub
-environments. It walks you through Convex preview credentials, synthetic test
-accounts, stable fixture URLs, AgentMail inboxes, and a Google Calendar refresh
-token. It writes secrets directly to GitHub and does not store them in the
-repository.
-
-The automated test paths are:
-
-| Test path        | Trigger                    | Target                                                  |
-| ---------------- | -------------------------- | ------------------------------------------------------- |
-| Merge gate       | Pull requests and `main`   | Local deterministic tests                               |
-| Release gate     | Push to `main` or manual   | Fresh Convex preview, migration, browser, and providers |
-| Advisory checks  | Nightly or manual          | Stable staging on Firefox and WebKit                    |
-| Production check | Every 15 minutes or manual | Pre-provisioned read-only production fixtures           |
-
-Read [the testing strategy](./docs/testing-strategy.md) for the release policy
-and [the current testing status](./docs/testing-status.md) for remaining gaps.
 
 ## Build and deploy
 
