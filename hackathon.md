@@ -12,7 +12,7 @@
 - **Auth:** Convex Auth
 - **AI models:** none
 - **Started:** 2026-09-05T11:58:05Z
-- **Last updated:** 2026-09-18T11:35:20Z
+- **Last updated:** 2026-09-18T11:36:27Z
 
 ## Log
 
@@ -91,7 +91,7 @@ production gates and their helper scripts. Pinned development to Node 26 and
 limited Playwright to one worker to avoid concurrent sign-ins with shared test
 accounts (`README.md`, `.nvmrc`, `package.json`, `playwright.config.ts`).
 
-### 2026-09-18 - working tree
+### 2026-09-18 - 5ba1eb6
 
 Fixed rapid multi-select voting with an optimistic Convex update so consecutive
 choices preserve the whole ballot. Reused cached browser auth with rate-limit
